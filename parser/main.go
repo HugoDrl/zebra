@@ -18,16 +18,20 @@ func readFile(filename string) ([]byte, error) {
 }
 
 func splitLine(line string) []string {
+	splitBySpace := true
 	words := make([]string, 0)
 	currWord := ""
 	for _, letter := range line {
-		if letter == ' ' && strings.Count(currWord, "\"")%2 == 0 {
+		if letter == '"' && (currWord == "" || !splitBySpace) {
+			splitBySpace = !splitBySpace
+			continue
+		}
+		if letter == ' ' && splitBySpace {
 			words = append(words, currWord)
 			currWord = ""
 			continue
 		}
 		currWord += string(letter)
-
 	}
 	if currWord != "" {
 		words = append(words, currWord)
