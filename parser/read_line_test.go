@@ -30,9 +30,11 @@ func TestSplitLine(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		output := splitLine(test.input)
-		if !slices.Equal(output, test.expected) {
-			t.Fatalf("%s: expected %v, got %v", name, test.expected, output)
-		}
+		t.Run(name, func(t *testing.T) {
+			output := splitLine(test.input)
+			if !slices.Equal(output, test.expected) {
+				t.Fatalf("%s: expected %v, got %v", name, test.expected, output)
+			}
+		})
 	}
 }
