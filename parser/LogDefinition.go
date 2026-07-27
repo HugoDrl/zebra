@@ -2,6 +2,7 @@ package parser
 
 import (
 	"maps"
+	"strings"
 	"time"
 )
 
@@ -16,7 +17,7 @@ const (
 )
 
 func toLevel(input string) (Level, bool) {
-	switch inputLevel := Level(input); inputLevel {
+	switch inputLevel := Level(strings.ToLower(input)); inputLevel {
 	case Debug:
 		return Debug, true
 	case Info:
