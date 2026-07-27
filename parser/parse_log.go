@@ -1,43 +1,12 @@
 package parser
 
 import (
-	"errors"
-	"fmt"
-	"os"
-	"strconv"
-	"strings"
 	"time"
+	"strings"
+	"fmt"
+	"strconv"
+	"errors"
 )
-
-func readFile(filename string) ([]byte, error) {
-	c, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, &FileError{File: filename, Err: err}
-	}
-	return c, nil
-}
-
-func splitLine(line string) []string {
-	splitBySpace := true
-	words := make([]string, 0)
-	currWord := ""
-	for _, letter := range line {
-		if letter == '"' && (currWord == "" || !splitBySpace) {
-			splitBySpace = !splitBySpace
-			continue
-		}
-		if letter == ' ' && splitBySpace {
-			words = append(words, currWord)
-			currWord = ""
-			continue
-		}
-		currWord += string(letter)
-	}
-	if currWord != "" {
-		words = append(words, currWord)
-	}
-	return words
-}
 
 func parseLine(line string) (*Log, error) {
 	words := splitLine(line)
@@ -98,6 +67,7 @@ func parseLine(line string) (*Log, error) {
 	}, nil
 }
 
+
 func checkLogValidity(log *Log, settings *ParseSettings) bool {
 	if !settings.StartDate.IsZero() && log.Time.Compare(settings.StartDate) < 0 {
 		return false
@@ -113,6 +83,7 @@ func checkLogValidity(log *Log, settings *ParseSettings) bool {
 	}
 	return true
 }
+
 
 func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 	lines := strings.Split(content, "\n")
@@ -136,6 +107,7 @@ func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 
 	return logs, logsErrors
 }
+
 
 func ParseFile(file string, settings *ParseSettings) ([]*Log, []error) {
 	logsParsed := make([]*Log, 0)
