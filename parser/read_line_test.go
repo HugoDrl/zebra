@@ -21,11 +21,19 @@ func TestSplitLine(t *testing.T) {
 		},
 		"sentence with quotes should keep words in quotes": {
 			input: "this is a sentence \"with several words in quotes\"",
-			expected: []string{"this", "is", "a", "sentence", "with several words in quotes"},
+			expected: []string{"this", "is", "a", "sentence", "\"with several words in quotes\""},
 		},
 		"words with quotes in it should not do anything": {
 			input: "this is a sen\"tence",
 			expected: []string{"this", "is", "a", "sen\"tence"},
+		},
+		"standard log format should split by field": {
+			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=50ms",
+			expected: []string{"2026-01-01T00:00:00Z", "WARNING", "service=test", "message=hey", "duration=50ms"},
+		},
+		"standard log with quotes should split by field": {
+			input: "2026-01-01T00:00:00Z WARNING service=test message=\"this log is very important\" duration=50ms",
+			expected: []string{"2026-01-01T00:00:00Z", "WARNING", "service=test", "message=\"this log is very important\"", "duration=50ms"},
 		},
 	}
 

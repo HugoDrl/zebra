@@ -17,9 +17,8 @@ func splitLine(line string) []string {
 	words := make([]string, 0)
 	currWord := ""
 	for _, letter := range line {
-		if letter == '"' && (currWord == "" || !splitBySpace) {
+		if letter == '"' {
 			splitBySpace = !splitBySpace
-			continue
 		}
 		if letter == ' ' && splitBySpace {
 			words = append(words, currWord)
