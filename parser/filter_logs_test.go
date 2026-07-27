@@ -47,6 +47,19 @@ func TestLogFilter(t *testing.T) {
 			},
 			expected: false,
 		},
+		"filter by service that includes, but level that does not include log": {
+			input: ParseSettings{
+				Service: "api",
+				Level: Warning,
+			},
+			expected: false,
+		},
+		"filter by level that includes log": {
+			input: ParseSettings{
+				Level: Error,
+			},
+			expected: true,
+		},
 	}
 
 	for name, test := range tests {
