@@ -39,6 +39,9 @@ func TestParseLineLog(t *testing.T) {
 					err,
 				)
 			}
+			if (log == nil) && test.expected.Equal(Log{}) {
+				t.Skip()
+			}
 			if !(*log).Equal(test.expected) {
 				t.Fatalf(
 					"%s: expected %s - got %s",

@@ -15,6 +15,23 @@ const (
 	Fatal   Level = "fatal"
 )
 
+func toLevel(input string) (Level, bool) {
+	switch inputLevel := Level(input); inputLevel {
+	case Debug:
+		return Debug, true
+	case Info:
+		return Info, true
+	case Warning:
+		return Warning, true
+	case Error:
+		return Error, true
+	case Fatal:
+		return Fatal, true
+	default:
+		return "", false
+	}
+}
+
 type Log struct {
 	Time     time.Time
 	Level    Level
