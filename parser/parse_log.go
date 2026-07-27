@@ -1,11 +1,11 @@
 package parser
 
 import (
-	"time"
-	"strings"
+	"errors"
 	"fmt"
 	"strconv"
-	"errors"
+	"strings"
+	"time"
 )
 
 func parseLine(line string) (*Log, error) {
@@ -72,7 +72,6 @@ func parseLine(line string) (*Log, error) {
 	}, nil
 }
 
-
 func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 	lines := strings.Split(content, "\n")
 	var logs []*Log
@@ -95,7 +94,6 @@ func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 
 	return logs, logsErrors
 }
-
 
 func ParseFile(file string, settings *ParseSettings) ([]*Log, []error) {
 	logsParsed := make([]*Log, 0)

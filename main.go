@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -77,11 +77,11 @@ func initSettings() (*parser.ParseSettings, *analyser.AnalyserSettings, error) {
 	}
 
 	parsingSettings := parser.ParseSettings{
-		Files: strings.Split(*files, ","),
+		Files:     strings.Split(*files, ","),
 		StartDate: processedStartDate,
-		EndDate: processedEndDate,
-		Level: parser.Level(*level),
-		Service: *service,
+		EndDate:   processedEndDate,
+		Level:     parser.Level(*level),
+		Service:   *service,
 	}
 	analyserSettings := analyser.AnalyserSettings{
 		SlowestLogsToRetrieve: *slowestLogs,
@@ -107,6 +107,6 @@ func main() {
 		close(errs)
 	}()
 
-	metrics := analyser.AnalyseLogs(out, errs , analyserSettings)
+	metrics := analyser.AnalyseLogs(out, errs, analyserSettings)
 	metrics.Display()
 }

@@ -42,8 +42,7 @@ type Log struct {
 }
 
 func (l Log) Equal(log Log) bool {
-	return (
-		l.Time.Equal(log.Time) &&
+	return (l.Time.Equal(log.Time) &&
 		l.Level == log.Level &&
 		l.Duration == log.Duration &&
 		l.Message == log.Message &&
@@ -52,9 +51,9 @@ func (l Log) Equal(log Log) bool {
 }
 
 type ParseSettings struct {
-	Files []string
+	Files     []string
 	StartDate time.Time
-	EndDate time.Time
-	Level Level
-	Service string
+	EndDate   time.Time
+	Level     Level
+	Service   string
 }
