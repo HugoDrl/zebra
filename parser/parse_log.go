@@ -87,7 +87,7 @@ func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 				valueErr.Line = line_no
 			}
 			logsErrors = append(logsErrors, err)
-		} else if checkLogValidity(log, settings) {
+		} else if filterLogs(log, settings) {
 			logs = append(logs, log)
 		}
 	}
