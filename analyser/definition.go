@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"git.hugoderlyn.com/Hugo/goLogParser.git/parser"
+	"github.com/HugoDrl/LogParser/parser"
 )
 
 type CollectionMetric struct {

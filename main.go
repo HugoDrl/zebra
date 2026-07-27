@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"git.hugoderlyn.com/Hugo/goLogParser.git/analyser"
-	"git.hugoderlyn.com/Hugo/goLogParser.git/parser"
+	"github.com/HugoDrl/LogParser/parser"
+	"github.com/HugoDrl/LogParser/analyser"
 )
 
 func ProcessFiles(settings *parser.ParseSettings, outChan chan<- *parser.Log, errsChan chan<- error, wg *sync.WaitGroup) {

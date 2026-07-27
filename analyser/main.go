@@ -4,9 +4,7 @@ import (
 	"errors"
 	"sort"
 	"sync"
-	"time"
-
-	"git.hugoderlyn.com/Hugo/goLogParser.git/parser"
+	"github.com/HugoDrl/LogParser/parser"
 )
 
 func newMetrics() *CollectionMetric {
