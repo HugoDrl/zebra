@@ -27,6 +27,26 @@ func TestLogFilter(t *testing.T) {
 			},
 			expected: true,
 		},
+		"filter by date that does not include the log": {
+			input: ParseSettings{
+				StartDate: time.Date(2025, 01, 01, 0, 0, 0, 0, time.UTC),
+				EndDate:   time.Date(2025, 11, 01, 0, 0, 0, 0, time	.UTC),
+			},
+			expected: false,
+		},
+		"filter by service that includes the log": {
+			input: ParseSettings{
+				Service: "api",
+			},
+			expected: true,
+		},
+		"filter by date that includes, but service that does not include log": {
+			input: ParseSettings{
+				StartDate: time.Date(2025, 01, 01, 0, 0, 0, 0, time.UTC),
+				Service: "db",
+			},
+			expected: false,
+		},
 	}
 
 	for name, test := range tests {
