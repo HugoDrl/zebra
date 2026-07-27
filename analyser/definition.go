@@ -16,6 +16,13 @@ type CollectionMetric struct {
 	Query              string
 }
 
+func newMetrics() *CollectionMetric {
+	metrics := CollectionMetric{}
+	metrics.Lines = make(map[parser.Level]int)
+	metrics.ServicePerformance = make(map[string]*ServiceMetric)
+	return &metrics
+}
+
 func (m *CollectionMetric) Display() {
 	fmt.Printf("Number of lines : \n")
 	for key, value := range m.Lines {
