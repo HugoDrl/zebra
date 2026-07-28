@@ -95,32 +95,31 @@ func TestMetricsEquality(t *testing.T) {
 	}
 }
 
-
 func TestEmptyMetricsEquality(t *testing.T) {
 	metric := CollectionMetric{}
-	tests := map[string]struct{
-		input CollectionMetric
+	tests := map[string]struct {
+		input    CollectionMetric
 		expected bool
 	}{
 		"same value should be equal": {
-			input: CollectionMetric{},
+			input:    CollectionMetric{},
 			expected: true,
 		},
 		"nil values should be equal": {
 			input: CollectionMetric{
-				Lines: nil,
+				Lines:              nil,
 				ServicePerformance: nil,
-				FileErrors: nil,
-				ParsingErrorCount: 0,
-				SlowestInput: nil,
-				Query: "",
+				FileErrors:         nil,
+				ParsingErrorCount:  0,
+				SlowestInput:       nil,
+				Query:              "",
 			},
 			expected: true,
 		},
 	}
 
 	for name, test := range tests {
-		t.Run(name, func(t *testing.T){
+		t.Run(name, func(t *testing.T) {
 			output := metric.IsEqual(test.input)
 
 			if output != test.expected {

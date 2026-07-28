@@ -7,6 +7,9 @@ import (
 )
 
 func (m *CollectionMetric) handleService(log *parser.Log) {
+	if log == nil {
+		return
+	}
 	s, ok := m.ServicePerformance[log.Service]
 	if !ok {
 		s = ServiceMetric{
@@ -19,6 +22,7 @@ func (m *CollectionMetric) handleService(log *parser.Log) {
 	s.AverageDuration += log.Duration
 	s.AverageDuration /= time.Duration(s.Lines)
 	m.ServicePerformance[log.Service] = s
+	m.Lines[log.Level]++
 }
 
 func (m *CollectionMetric) handleSlowestLogs(slowestLogsToRetrieve int, log *parser.Log) {
