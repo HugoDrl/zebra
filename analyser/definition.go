@@ -49,7 +49,7 @@ func (m *CollectionMetric) Display() {
 	}
 }
 
-func (m *CollectionMetric) IsEqual(metric *CollectionMetric) bool {
+func (m CollectionMetric) IsEqual(metric CollectionMetric) bool {
 	return (maps.Equal(m.Lines, metric.Lines) &&
 		maps.Equal(m.ServicePerformance, metric.ServicePerformance) &&
 		slices.Equal(m.FileErrors, metric.FileErrors) &&
