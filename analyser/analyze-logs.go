@@ -6,7 +6,11 @@ import (
 	"sync"
 )
 
-func AnalyseLogs(logChan <-chan *parser.Log, errChan <-chan error, settings *AnalyserSettings) *CollectionMetric {
+func AnalyseLogs(
+	logChan <-chan *parser.Log,
+	errChan <-chan error,
+	settings *AnalyserSettings,
+) *CollectionMetric {
 	metrics := newMetrics()
 	var wg sync.WaitGroup
 
