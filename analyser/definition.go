@@ -2,6 +2,8 @@ package analyser
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"time"
 
 	"github.com/HugoDrl/LogParser/parser"
@@ -45,6 +47,15 @@ func (m *CollectionMetric) Display() {
 			fmt.Println(e.Error())
 		}
 	}
+}
+
+func (m *CollectionMetric) IsEqual(metric *CollectionMetric) bool {
+	return (maps.Equal(m.Lines, metric.Lines) &&
+		maps.Equal(m.ServicePerformance, metric.ServicePerformance) &&
+		slices.Equal(m.FileErrors, metric.FileErrors) &&
+		m.ParsingErrorCount == metric.ParsingErrorCount &&
+		slices.Equal(m.SlowestInput, metric.SlowestInput) &&
+		m.Query == metric.Query)
 }
 
 type ServiceMetric struct {
