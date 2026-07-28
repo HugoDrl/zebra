@@ -7,9 +7,9 @@ import (
 )
 
 func (m *CollectionMetric) handleService(log *parser.Log) {
-	s := m.ServicePerformance[log.Service]
-	if s == nil {
-		s = &ServiceMetric{
+	s, ok := m.ServicePerformance[log.Service]
+	if !ok {
+		s = ServiceMetric{
 			Name: log.Service,
 		}
 	}

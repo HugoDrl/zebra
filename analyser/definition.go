@@ -11,7 +11,7 @@ import (
 
 type CollectionMetric struct {
 	Lines              map[parser.Level]int
-	ServicePerformance map[string]*ServiceMetric
+	ServicePerformance map[string]ServiceMetric
 	FileErrors         []*parser.FileError
 	ParsingErrorCount  int
 	SlowestInput       []*parser.Log
@@ -21,7 +21,7 @@ type CollectionMetric struct {
 func newMetrics() *CollectionMetric {
 	metrics := CollectionMetric{}
 	metrics.Lines = make(map[parser.Level]int)
-	metrics.ServicePerformance = make(map[string]*ServiceMetric)
+	metrics.ServicePerformance = make(map[string]ServiceMetric)
 	return &metrics
 }
 

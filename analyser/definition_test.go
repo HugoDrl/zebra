@@ -9,7 +9,7 @@ import (
 func TestMetricsEquality(t *testing.T) {
 	metric := &CollectionMetric{
 		Lines: map[parser.Level]int{},
-		ServicePerformance: map[string]*ServiceMetric{
+		ServicePerformance: map[string]ServiceMetric{
 			"database": {
 				Name:            "database",
 				Lines:           3,
@@ -29,6 +29,43 @@ func TestMetricsEquality(t *testing.T) {
 		"same pointer should be equal": {
 			input:    metric,
 			expected: true,
+		},
+		"not the same pointer but same value should be equal": {
+			input: &CollectionMetric{
+				Lines: map[parser.Level]int{},
+				ServicePerformance: map[string]ServiceMetric{
+					"database": {
+						Name:            "database",
+						Lines:           3,
+						AverageDuration: 50 * time.Millisecond,
+					},
+					"api": {
+						Name:            "api",
+						Lines:           1,
+						AverageDuration: 22 * time.Millisecond,
+					},
+				},
+			},
+			expected: true,
+		},
+		"service metrics with capital letters instead of minimal should detect diff": {
+			input: &CollectionMetric{
+				Lines: map[parser.Level]int{},
+				ServicePerformance: map[string]ServiceMetric{
+					"database": {
+						Name:            "database",
+						Lines:           3,
+						AverageDuration: 50 * time.Millisecond,
+					},
+					// API should differ from api
+					"API": {
+						Name:            "API",
+						Lines:           1,
+						AverageDuration: 22 * time.Millisecond,
+					},
+				},
+			},
+			expected: false,
 		},
 	}
 
