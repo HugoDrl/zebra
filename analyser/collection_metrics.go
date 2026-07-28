@@ -21,7 +21,10 @@ func (m *CollectionMetric) handleService(log *parser.Log) {
 	m.ServicePerformance[log.Service] = s
 }
 
-func (m *CollectionMetric) handleSlowestLogs(slowestLogsToRetrieve int, log *parser.Log) {
+func (m *CollectionMetric) handleSlowestLogs(
+	slowestLogsToRetrieve int,
+	log *parser.Log,
+) {
 	if slowestLogsToRetrieve == 0 {
 		return
 	}
