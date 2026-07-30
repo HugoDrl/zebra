@@ -24,19 +24,17 @@ func TestHandleService(t *testing.T) {
 		}
 	}
 
-	defaultMetric := getDefaultMetric()
-
 	tests := map[string]struct {
 		input    *parser.Log
 		expected CollectionMetric
 	}{
 		"empty log should not change anything": {
 			input:    &parser.Log{},
-			expected: defaultMetric,
+			expected: getDefaultMetric(),
 		},
 		"nil pointer should not change anything": {
 			input:    nil,
-			expected: defaultMetric,
+			expected: getDefaultMetric(),
 		},
 		"api log should increase the same ServiceMetric": {
 			input: &parser.Log{
