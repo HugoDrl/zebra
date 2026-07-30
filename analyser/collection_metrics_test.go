@@ -8,19 +8,24 @@ import (
 )
 
 func TestHandleService(t *testing.T) {
-	defaultMetric := CollectionMetric{
-		Lines: map[parser.Level]int{
-			parser.Warning: 1,
-			parser.Info:    10,
-		},
-		ServicePerformance: map[string]ServiceMetric{
-			"api": {
-				Name:            "api",
-				Lines:           11,
-				AverageDuration: 44 * time.Millisecond,
+	getDefaultMetric := func() CollectionMetric {
+		return CollectionMetric{
+			Lines: map[parser.Level]int{
+				parser.Warning: 1,
+				parser.Info:    10,
 			},
-		},
+			ServicePerformance: map[string]ServiceMetric{
+				"api": {
+					Name:            "api",
+					Lines:           11,
+					AverageDuration: 44 * time.Millisecond,
+				},
+			},
+		}
 	}
+
+	defaultMetric := getDefaultMetric()
+
 	tests := map[string]struct {
 		input    *parser.Log
 		expected CollectionMetric
@@ -39,25 +44,40 @@ func TestHandleService(t *testing.T) {
 				Service:  "api",
 				Level:    parser.Info,
 			},
-			expected: CollectionMetric{
-				Lines: map[parser.Level]int{
-					parser.Warning: 1,
-					parser.Info:    11,
-				},
-				ServicePerformance: map[string]ServiceMetric{
-					"api": {
-						Name:            "api",
-						Lines:           12,
-						AverageDuration: 44 * time.Millisecond,
-					},
-				},
+			expected: func() CollectionMetric {
+				metric := getDefaultMetric()
+				metric.Lines[parser.Info]++
+
+				// Average duration should not move for this one
+				perf := metric.ServicePerformance["api"]
+				perf.Lines++
+				metric.ServicePerformance["api"] = perf
+
+				return metric
+			}(),
+		},
+		"other service log should create a new ServiceMetric": {
+			input: &parser.Log{
+				Duration: 100 * time.Millisecond,
+				Service:  "database",
+				Level:    parser.Info,
 			},
+			expected: func() CollectionMetric {
+				metric := getDefaultMetric()
+				metric.Lines[parser.Info]++
+				metric.ServicePerformance["database"] = ServiceMetric{
+					Name:            "database",
+					Lines:           1,
+					AverageDuration: 100 * time.Millisecond,
+				}
+				return metric
+			}(),
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			metric := defaultMetric
+			metric := getDefaultMetric()
 			metric.handleService(test.input)
 
 			if !metric.IsEqual(test.expected) {

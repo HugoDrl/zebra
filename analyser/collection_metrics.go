@@ -6,10 +6,21 @@ import (
 	"time"
 )
 
+func validateLog(log parser.Log) bool {
+	if log.Service == "" {
+		return false
+	}
+	return true
+}
+
 func (m *CollectionMetric) handleService(log *parser.Log) {
 	if log == nil {
 		return
 	}
+	if !validateLog(*log) {
+		return
+	}
+
 	s, ok := m.ServicePerformance[log.Service]
 	if !ok {
 		s = ServiceMetric{
