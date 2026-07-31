@@ -21,6 +21,7 @@ func TestParseLineLog(t *testing.T) {
 				Service:  "test",
 				Message:  "hey",
 				Duration: 50 * time.Millisecond,
+				extra: map[string]string{},
 			},
 		},
 		"invalid: invalid service": {
@@ -49,6 +50,7 @@ func TestParseLineLog(t *testing.T) {
 				Service:  "test",
 				Message:  "\"this log is very important\"",
 				Duration: 50 * time.Millisecond,
+				extra: map[string]string{},
 			},
 		},
 	}

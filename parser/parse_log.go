@@ -26,7 +26,7 @@ func parseLine(line string) (Log, error) {
 			ErroredValue: "level",
 		}
 	}
-	var fields map[string]string
+	fields := make(map[string]string)
 	var message string
 	var service string
 	var duration time.Duration
@@ -56,9 +56,6 @@ func parseLine(line string) (Log, error) {
 
 			duration = time.Duration(value * int(time.Millisecond))
 		default:
-			if fields == nil {
-				fields = make(map[string]string, 0)
-			}
 			fields[title] = f[1]
 		}
 	}
