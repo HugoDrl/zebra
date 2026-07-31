@@ -16,7 +16,6 @@ func AnalyseLogs(
 
 	wg.Go(func() {
 		for log := range logChan {
-			metrics.Lines[log.Level]++
 			metrics.handleService(log)
 			metrics.handleSlowestLogs(settings.SlowestLogsToRetrieve, log)
 		}
