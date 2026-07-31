@@ -8,23 +8,23 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestHandleService(t *testing.T) {
-	getDefaultMetric := func() CollectionMetric {
-		return CollectionMetric{
-			Lines: map[parser.Level]int{
-				parser.Warning: 1,
-				parser.Info:    10,
+func getDefaultMetric() CollectionMetric {
+	return CollectionMetric{
+		Lines: map[parser.Level]int{
+			parser.Warning: 1,
+			parser.Info:    10,
+		},
+		ServicePerformance: map[string]ServiceMetric{
+			"api": {
+				Name:            "api",
+				Lines:           11,
+				AverageDuration: 44 * time.Millisecond,
 			},
-			ServicePerformance: map[string]ServiceMetric{
-				"api": {
-					Name:            "api",
-					Lines:           11,
-					AverageDuration: 44 * time.Millisecond,
-				},
-			},
-		}
+		},
 	}
+}
 
+func TestHandleService(t *testing.T) {
 	tests := map[string]struct {
 		input    *parser.Log
 		expected CollectionMetric
@@ -99,6 +99,97 @@ func TestHandleService(t *testing.T) {
 			metric.handleService(test.input)
 
 			if diff := cmp.Diff(test.expected, metric, cmp.AllowUnexported(CollectionMetric{})); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}
+
+func TestSlowestLogsHandler(t *testing.T) {
+	type SlowestLogsInput struct {
+		logs            []parser.Log
+		slowestLogsSize int
+	}
+	tests := map[string]struct {
+		input    SlowestLogsInput
+		expected CollectionMetric
+	}{
+		"adding one log to metrics with size 1 should add it": {
+			input: SlowestLogsInput{
+				logs: []parser.Log{
+					{Duration: 12 * time.Millisecond},
+				},
+				slowestLogsSize: 1,
+			},
+			expected: func() CollectionMetric {
+				metric := getDefaultMetric()
+				metric.SlowestInput = []*parser.Log{
+					{Duration: 12 * time.Millisecond},
+				}
+				return metric
+			}(),
+		},
+		"adding one entry to metrics with size 0 should not add it": {
+			input: SlowestLogsInput{
+				logs: []parser.Log{
+					{Duration: 12 * time.Millisecond},
+				},
+				slowestLogsSize: 0,
+			},
+			expected: getDefaultMetric(),
+		},
+		"adding two entries to metrics with size 1 should add the slowest": {
+			input: SlowestLogsInput{
+				logs: []parser.Log{
+					{Duration: 12 * time.Millisecond},
+					{Duration: 20 * time.Millisecond},
+				},
+				slowestLogsSize: 1,
+			},
+			expected: func() CollectionMetric {
+				metric := getDefaultMetric()
+				metric.SlowestInput = []*parser.Log{
+					{Duration: 20 * time.Millisecond},
+				}
+				return metric
+			}(),
+		},
+		"adding two entries to metrics with size 5 should add both": {
+			input: SlowestLogsInput{
+				logs: []parser.Log{
+					{Duration: 12 * time.Millisecond},
+					{Duration: 20 * time.Millisecond},
+				},
+				slowestLogsSize: 5,
+			},
+			expected: func() CollectionMetric {
+				metric := getDefaultMetric()
+				metric.SlowestInput = []*parser.Log{
+					{Duration: 12 * time.Millisecond},
+					{Duration: 20 * time.Millisecond},
+				}
+				return metric
+			}(),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			metric := getDefaultMetric()
+			for _, log := range test.input.logs {
+				metric.handleSlowestLogs(
+					test.input.slowestLogsSize,
+					&log,
+				)
+			}
+
+			if diff := cmp.Diff(
+				test.expected,
+				metric,
+				cmp.AllowUnexported(
+					CollectionMetric{},
+					parser.Log{},
+				)); diff != "" {
 				t.Fatal(diff)
 			}
 		})
