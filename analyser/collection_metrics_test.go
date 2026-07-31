@@ -72,6 +72,25 @@ func TestHandleService(t *testing.T) {
 				return metric
 			}(),
 		},
+		"happending a log with a different duration should modify average properly": {
+			input: &parser.Log{
+				Duration: 100 * time.Millisecond,
+				Service:  "api",
+				Level:    parser.Error,
+			},
+			expected: func() CollectionMetric {
+				metric := getDefaultMetric()
+				metric.Lines[parser.Error]++
+
+				// Average duration should not move for this one
+				perf := metric.ServicePerformance["api"]
+				perf.Lines++
+				perf.AverageDuration = (perf.AverageDuration*time.Duration(perf.Lines-1) + 100*time.Millisecond) / time.Duration(perf.Lines)
+				metric.ServicePerformance["api"] = perf
+
+				return metric
+			}(),
+		},
 	}
 
 	for name, test := range tests {
