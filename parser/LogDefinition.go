@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"maps"
 	"strings"
 	"time"
 )
@@ -40,15 +39,6 @@ type Log struct {
 	Message  string
 	Service  string
 	extra    map[string]string
-}
-
-func (l Log) Equal(log Log) bool {
-	return (l.Time.Equal(log.Time) &&
-		l.Level == log.Level &&
-		l.Duration == log.Duration &&
-		l.Message == log.Message &&
-		l.Service == log.Service &&
-		maps.Equal(l.extra, log.extra))
 }
 
 type ParseSettings struct {

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/HugoDrl/LogParser/parser"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestHandleService(t *testing.T) {
@@ -78,8 +79,8 @@ func TestHandleService(t *testing.T) {
 			metric := getDefaultMetric()
 			metric.handleService(test.input)
 
-			if !metric.IsEqual(test.expected) {
-				t.Fatalf("%s: expected %v - got %v", name, test.expected, metric)
+			if diff := cmp.Diff(test.expected, metric, cmp.AllowUnexported(CollectionMetric{})); diff != "" {
+				t.Fatal(diff)
 			}
 		})
 	}

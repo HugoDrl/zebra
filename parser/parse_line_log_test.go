@@ -3,6 +3,8 @@ package parser
 import (
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestParseLineLog(t *testing.T) {
@@ -63,16 +65,8 @@ func TestParseLineLog(t *testing.T) {
 					err,
 				)
 			}
-			if (log == nil) && test.expected.Equal(Log{}) {
-				return
-			}
-			if !(*log).Equal(test.expected) {
-				t.Fatalf(
-					"%s: expected %s - got %s",
-					name,
-					test.expected,
-					log,
-				)
+			if diff := cmp.Diff(test.expected, log, cmp.AllowUnexported(Log{})); diff != "" {
+				t.Fatal(diff)
 			}
 		})
 	}
