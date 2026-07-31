@@ -8,25 +8,25 @@ import (
 	"time"
 )
 
-func parseLine(line string) (*Log, error) {
+func parseLine(line string) (Log, error) {
 	words := splitLine(line)
 	if len(words) < 2 {
-		return nil, &ParseError{Reason: fmt.Sprintf("Not enough arguments - expected 2 - found %d", len(words))}
+		return Log{}, &ParseError{Reason: fmt.Sprintf("Not enough arguments - expected 2 - found %d", len(words))}
 	}
 
 	date, err := time.Parse(time.RFC3339, words[0])
 	if err != nil {
-		return nil, &ValueError{ExpectedValue: "time format - RFC3339", ErroredValue: words[0]}
+		return Log{}, &ValueError{ExpectedValue: "time format - RFC3339", ErroredValue: words[0]}
 	}
 
 	l := strings.TrimFunc(words[1], func(l rune) bool { return l == '[' || l == ']' })
 	level, ok := toLevel(strings.ToLower(l))
 	if !ok {
-		return nil, &ValueError{
+		return Log{}, &ValueError{
 			ErroredValue: "level",
 		}
 	}
-	fields := make(map[string]string, 0)
+	var fields map[string]string
 	var message string
 	var service string
 	var duration time.Duration
@@ -36,7 +36,7 @@ func parseLine(line string) (*Log, error) {
 		}
 		f := strings.Split(word, "=")
 		if len(f) != 2 {
-			return nil, &ParseError{Reason: fmt.Sprintf("Wrong format in key-values design (found %v)", f)}
+			return Log{}, &ParseError{Reason: fmt.Sprintf("Wrong format in key-values design (found %v)", f)}
 		}
 		title := strings.ToLower(f[0])
 
@@ -47,22 +47,25 @@ func parseLine(line string) (*Log, error) {
 			service = f[1]
 		case "duration":
 			if f[1][len(f[1])-2:] != "ms" {
-				return nil, &ValueError{ExpectedValue: "duration value in milliseconds on format xxxms", ErroredValue: f[1]}
+				return Log{}, &ValueError{ExpectedValue: "duration value in milliseconds on format xxxms", ErroredValue: f[1]}
 			}
 			value, err := strconv.Atoi(f[1][:len(f[1])-2])
 			if err != nil {
-				return nil, &ValueError{ExpectedValue: "duration value in milliseconds on format xxxms", ErroredValue: f[1]}
+				return Log{}, &ValueError{ExpectedValue: "duration value in milliseconds on format xxxms", ErroredValue: f[1]}
 			}
 
 			duration = time.Duration(value * int(time.Millisecond))
 		default:
+			if fields == nil {
+				fields = make(map[string]string, 0)
+			}
 			fields[title] = f[1]
 		}
 	}
 	if message == "" || service == "" || duration == 0 {
-		return nil, &ValueError{ExpectedValue: "message field, service field, and duration field, should not be empty.", ErroredValue: fmt.Sprintf("message: %s, service: %s, duration: %d", message, service, duration)}
+		return Log{}, &ValueError{ExpectedValue: "message field, service field, and duration field, should not be empty.", ErroredValue: fmt.Sprintf("message: %s, service: %s, duration: %d", message, service, duration)}
 	}
-	return &Log{
+	return Log{
 		Time:     date,
 		Level:    level,
 		Message:  message,
@@ -87,8 +90,8 @@ func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 				valueErr.Line = line_no
 			}
 			logsErrors = append(logsErrors, err)
-		} else if filterLogs(log, settings) {
-			logs = append(logs, log)
+		} else if filterLogs(&log, settings) {
+			logs = append(logs, &log)
 		}
 	}
 
