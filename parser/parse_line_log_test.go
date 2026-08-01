@@ -100,6 +100,65 @@ func TestParseLogContent(t *testing.T) {
 				}},
 			},
 		},
+		"valid log should parse it": {
+			inputContent:  "2026-01-01T00:00:00Z WARNING service=database duration=50ms message=\"query executed\"",
+			inputSettings: ParseSettings{},
+			expected: ParseLogOutput{
+				Log: []*Log{
+					{
+						Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+						Level:    Warning,
+						Service:  "database",
+						Duration: 50 * time.Millisecond,
+						Message:  `"query executed"`,
+						Extra:    map[string]string{},
+					},
+				},
+			},
+		},
+		"log with extra fields should add it": {
+			inputContent:  "2026-01-01T00:00:00Z WARNING service=database duration=50ms message=\"query executed\" hey=0 extra_field=\"an extra field\"",
+			inputSettings: ParseSettings{},
+			expected: ParseLogOutput{
+				Log: []*Log{
+					{
+						Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+						Level:    Warning,
+						Service:  "database",
+						Duration: 50 * time.Millisecond,
+						Message:  `"query executed"`,
+						Extra: map[string]string{
+							"hey":         "0",
+							"extra_field": `"an extra field"`,
+						},
+					},
+				},
+			},
+		},
+		"multiple logs should add them": {
+			inputContent:  "2026-01-01T00:00:00Z WARNING service=database duration=50ms message=\"query executed\"\n2026-01-02T01:00:00Z INFO service=api duration=10ms message=ok",
+			inputSettings: ParseSettings{},
+			expected: ParseLogOutput{
+				Log: []*Log{
+					{
+						Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+						Level:    Warning,
+						Service:  "database",
+						Duration: 50 * time.Millisecond,
+						Message:  `"query executed"`,
+						Extra:    map[string]string{},
+					},
+					{
+						Time:     time.Date(2026, 1, 2, 1, 0, 0, 0, time.UTC),
+						Level:    Info,
+						Service:  "api",
+						Message:  "ok",
+						Duration: 10 * time.Millisecond,
+						Extra:    map[string]string{},
+					},
+				},
+			},
+		},
 	}
 
 	for name, test := range tests {
