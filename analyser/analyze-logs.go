@@ -2,8 +2,9 @@ package analyser
 
 import (
 	"errors"
-	"github.com/HugoDrl/LogParser/parser"
 	"sync"
+
+	"github.com/HugoDrl/LogParser/parser"
 )
 
 func AnalyseLogs(
