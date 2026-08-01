@@ -73,3 +73,45 @@ func TestParseLineLog(t *testing.T) {
 		})
 	}
 }
+
+func TestParseLogContent(t *testing.T) {
+	type ParseLogOutput struct {
+		Log []*Log
+		Err []error
+	}
+
+	tests := map[string]struct {
+		inputContent  string
+		inputSettings ParseSettings
+		expected      ParseLogOutput
+	}{
+		"no content should return nothing": {
+			inputContent:  "",
+			inputSettings: ParseSettings{},
+			expected:      ParseLogOutput{},
+		},
+		"invalid log should return an error": {
+			inputContent:  "INVALID LOG",
+			inputSettings: ParseSettings{},
+			expected: ParseLogOutput{
+				Err: []error{&ValueError{
+					ErroredValue:  "INVALID",
+					ExpectedValue: "time format - RFC3339",
+				}},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			log, err := parseLog(test.inputContent, &test.inputSettings)
+			output := ParseLogOutput{
+				Log: log,
+				Err: err,
+			}
+			if diff := cmp.Diff(test.expected, output); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}
