@@ -12,7 +12,7 @@ func TestLogFilter(t *testing.T) {
 		Duration: 5 * time.Second,
 		Message:  "\"response time out \"",
 		Service:  "api",
-		extra: map[string]string{
+		Extra: map[string]string{
 			"path": "/",
 		},
 	}

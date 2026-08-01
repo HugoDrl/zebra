@@ -21,7 +21,7 @@ func TestParseLineLog(t *testing.T) {
 				Service:  "test",
 				Message:  "hey",
 				Duration: 50 * time.Millisecond,
-				extra: map[string]string{},
+				Extra:    map[string]string{},
 			},
 		},
 		"invalid: invalid service": {
@@ -50,7 +50,7 @@ func TestParseLineLog(t *testing.T) {
 				Service:  "test",
 				Message:  "\"this log is very important\"",
 				Duration: 50 * time.Millisecond,
-				extra: map[string]string{},
+				Extra:    map[string]string{},
 			},
 		},
 	}
@@ -67,7 +67,7 @@ func TestParseLineLog(t *testing.T) {
 					err,
 				)
 			}
-			if diff := cmp.Diff(test.expected, log, cmp.AllowUnexported(Log{})); diff != "" {
+			if diff := cmp.Diff(test.expected, log); diff != "" {
 				t.Fatal(diff)
 			}
 		})

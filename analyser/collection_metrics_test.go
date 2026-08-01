@@ -98,7 +98,7 @@ func TestHandleService(t *testing.T) {
 			metric := getDefaultMetric()
 			metric.handleService(test.input)
 
-			if diff := cmp.Diff(test.expected, metric, cmp.AllowUnexported(CollectionMetric{})); diff != "" {
+			if diff := cmp.Diff(test.expected, metric); diff != "" {
 				t.Fatal(diff)
 			}
 		})
@@ -183,13 +183,7 @@ func TestSlowestLogsHandler(t *testing.T) {
 				)
 			}
 
-			if diff := cmp.Diff(
-				test.expected,
-				metric,
-				cmp.AllowUnexported(
-					CollectionMetric{},
-					parser.Log{},
-				)); diff != "" {
+			if diff := cmp.Diff(test.expected, metric); diff != "" {
 				t.Fatal(diff)
 			}
 		})

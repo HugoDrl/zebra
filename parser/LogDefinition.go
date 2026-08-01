@@ -38,7 +38,7 @@ type Log struct {
 	Duration time.Duration
 	Message  string
 	Service  string
-	extra    map[string]string
+	Extra    map[string]string
 }
 
 type ParseSettings struct {

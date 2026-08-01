@@ -67,7 +67,7 @@ func parseLine(line string) (Log, error) {
 		Level:    level,
 		Message:  message,
 		Service:  service,
-		extra:    fields,
+		Extra:    fields,
 		Duration: duration,
 	}, nil
 }
