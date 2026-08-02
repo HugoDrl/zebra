@@ -4,6 +4,7 @@ import (
 	"os"
 )
 
+// TODO: parser should not be responsible for file reading
 func readFile(filename string) ([]byte, error) {
 	c, err := os.ReadFile(filename)
 	if err != nil {

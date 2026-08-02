@@ -72,6 +72,7 @@ func parseLine(line string) (Log, error) {
 	}, nil
 }
 
+// TODO: think about pointer retrieval -> should it ?
 func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 	lines := strings.Split(content, "\n")
 	var logs []*Log
@@ -83,6 +84,7 @@ func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 		}
 		if log, err := parseLine(line); err != nil {
 			var valueErr *ValueError
+			// TODO: change errors checking
 			if errors.As(err, &valueErr) {
 				valueErr.Line = line_no
 			}
@@ -95,6 +97,7 @@ func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 	return logs, logsErrors
 }
 
+// FIXME: I don't think parser package should actually handle file reading
 func ParseFile(file string, settings *ParseSettings) ([]*Log, []error) {
 	logsParsed := make([]*Log, 0)
 	logsErr := make([]error, 0)

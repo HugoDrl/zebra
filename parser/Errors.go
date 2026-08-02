@@ -7,6 +7,7 @@ type FileError struct {
 	Err  error
 }
 
+// TODO: Error should not (i think) be using pointers here
 func (e *FileError) Error() string {
 	return fmt.Sprintf("Error encountered on file %s - %s", e.File, e.Err)
 }
