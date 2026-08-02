@@ -189,3 +189,43 @@ func TestSlowestLogsHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateLog(t *testing.T) {
+	tests := map[string]struct {
+		input    parser.Log
+		expected bool
+	}{
+		"valid log should just be valid": {
+			input: parser.Log{
+				Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				Service:  "api",
+				Duration: 50 * time.Millisecond,
+			},
+			expected: true,
+		},
+		"log with emtpy service should not be valid": {
+			input: parser.Log{
+				Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				Service:  "",
+				Duration: 50 * time.Millisecond,
+			},
+			expected: false,
+		},
+		"log with negative duration should not be valid": {
+			input: parser.Log{
+				Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				Service:  "api",
+				Duration: -50 * time.Millisecond,
+			},
+			expected: false,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			if diff := cmp.Diff(test.expected, validateLog(test.input)); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}

@@ -19,19 +19,19 @@ func TestFileError(t *testing.T) {
 			expected: "Error encountered on file  - %!s(<nil>)",
 		},
 		"valid error with complete informations should return the error": {
-			input:    parser.FileError{
+			input: parser.FileError{
 				File: "test.txt",
-				Err: errors.New("this is an error"),
+				Err:  errors.New("this is an error"),
 			},
 			expected: "Error encountered on file test.txt - this is an error",
 		},
 		"valid error with os Path error": {
-			input:    parser.FileError{
+			input: parser.FileError{
 				File: "test.txt",
 				Err: &os.PathError{
-					Op: "READ",
+					Op:   "READ",
 					Path: "./test.txt",
-					Err: os.ErrNotExist,
+					Err:  os.ErrNotExist,
 				},
 			},
 			expected: "Error encountered on file test.txt - READ ./test.txt: file does not exist",
@@ -50,12 +50,12 @@ func TestFileError(t *testing.T) {
 }
 
 func TestParseError(t *testing.T) {
-	tests := map[string]struct{
-		input parser.ParseError
+	tests := map[string]struct {
+		input    parser.ParseError
 		expected string
 	}{
 		"empty error should return a weird string": {
-			input: parser.ParseError{},
+			input:    parser.ParseError{},
 			expected: "Error encountered while parsing file { <nil>} on line 0 - ",
 		},
 		// TODO: correct this behavior as this is not normal
@@ -64,18 +64,18 @@ func TestParseError(t *testing.T) {
 			input: parser.ParseError{
 				File: parser.FileError{
 					File: "./test.txt",
-					Err: os.ErrNotExist,
+					Err:  os.ErrNotExist,
 				},
-				Line: 10,
+				Line:   10,
 				Reason: os.ErrNotExist.Error(),
-				Err: os.ErrNotExist,
+				Err:    os.ErrNotExist,
 			},
 			expected: "Error encountered while parsing file {./test.txt file does not exist} on line 10 - file does not exist",
 		},
 	}
 
 	for name, test := range tests {
-		t.Run(name, func(t *testing.T){
+		t.Run(name, func(t *testing.T) {
 			output := test.input.Error()
 			if diff := cmp.Diff(test.expected, output); diff != "" {
 				t.Fatal(diff)
@@ -85,31 +85,31 @@ func TestParseError(t *testing.T) {
 }
 
 func TestValueError(t *testing.T) {
-	tests := map[string]struct{
-		input parser.ValueError
+	tests := map[string]struct {
+		input    parser.ValueError
 		expected string
 	}{
 		"empty value error should return a weird string": {
-			input: parser.ValueError{},
+			input:    parser.ValueError{},
 			expected: "{ <nil>} : Wrong value on line 0: expected value :  (got )",
 		},
 		"normal value error should return a formatted string": {
 			input: parser.ValueError{
 				File: parser.FileError{
 					File: "./test.txt",
-					Err: os.ErrNotExist,
+					Err:  os.ErrNotExist,
 				},
-				Line: 10,
-				ErroredValue: "time",
+				Line:          10,
+				ErroredValue:  "time",
 				ExpectedValue: "hey",
-				Err: os.ErrNotExist,
+				Err:           os.ErrNotExist,
 			},
 			expected: "{./test.txt file does not exist} : Wrong value on line 10: expected value : hey (got time)",
 		},
 	}
 
 	for name, test := range tests {
-		t.Run(name, func (t *testing.T){
+		t.Run(name, func(t *testing.T) {
 			if diff := cmp.Diff(test.expected, test.input.Error()); diff != "" {
 				t.Fatal(diff)
 			}
