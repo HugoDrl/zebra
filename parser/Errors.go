@@ -20,7 +20,7 @@ type ParseError struct {
 }
 
 func (e *ParseError) Error() string {
-	return fmt.Sprintf("Error encoutered while parsing file %s on line %d - %s", e.File, e.Line, e.Reason)
+	return fmt.Sprintf("Error encountered while parsing file %s on line %d - %s", e.File, e.Line, e.Reason)
 }
 
 type ValueError struct {
