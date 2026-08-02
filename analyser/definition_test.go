@@ -7,10 +7,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestNewMetrics(t *testing.T){
+func TestNewMetrics(t *testing.T) {
 	metric := newMetrics()
 	expected := &CollectionMetric{
-		Lines: map[parser.Level]int{},
+		Lines:              map[parser.Level]int{},
 		ServicePerformance: map[string]ServiceMetric{},
 	}
 	if diff := cmp.Diff(expected, metric); diff != "" {
