@@ -138,11 +138,12 @@ func TestSlowestLogsHandler(t *testing.T) {
 			},
 			expected: getDefaultMetric(),
 		},
-		"adding two entries to metrics with size 1 should add the slowest": {
+		"adding more entries to metrics with size 1 should add the slowest": {
 			input: SlowestLogsInput{
 				logs: []parser.Log{
-					{Duration: 12 * time.Millisecond},
 					{Duration: 20 * time.Millisecond},
+					{Duration: 10 * time.Millisecond},
+					{Duration: 12 * time.Millisecond},
 				},
 				slowestLogsSize: 1,
 			},

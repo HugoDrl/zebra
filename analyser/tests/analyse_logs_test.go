@@ -57,6 +57,20 @@ func TestLogAnalyze(t *testing.T) {
 				},
 			},
 		},
+		"any other error than a file error should increase log parsing error": {
+			input: LogAnalyzeInput{
+				logChan: feedThenCloseChan([]*parser.Log{}...),
+				errChan: feedThenCloseChan([]error{
+					&parser.ValueError{},
+					&parser.ParseError{},
+				}...),
+			},
+			expected: &analyser.CollectionMetric{
+				Lines:              map[parser.Level]int{},
+				ServicePerformance: map[string]analyser.ServiceMetric{},
+				ParsingErrorCount:  2,
+			},
+		},
 		"adding a log should increase metrics stats": {
 			input: LogAnalyzeInput{
 				logChan: feedThenCloseChan([]*parser.Log{
