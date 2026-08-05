@@ -27,10 +27,16 @@ func TestLogFilter(t *testing.T) {
 			},
 			expected: true,
 		},
-		"filter by date that does not include the log": {
+		"filter by end date that does not include the log": {
 			input: ParseSettings{
 				StartDate: time.Date(2025, 01, 01, 0, 0, 0, 0, time.UTC),
 				EndDate:   time.Date(2025, 11, 01, 0, 0, 0, 0, time.UTC),
+			},
+			expected: false,
+		},
+		"filter by start date that does not include the log": {
+			input: ParseSettings{
+				StartDate: time.Date(2027, 01, 01, 0, 0, 0, 0, time.UTC),
 			},
 			expected: false,
 		},

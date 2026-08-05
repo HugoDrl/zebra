@@ -8,49 +8,96 @@ import (
 )
 
 func TestParseLineLog(t *testing.T) {
+	type ParseLineOutput struct {
+		Log Log
+		Err error
+	}
 	tests := map[string]struct {
-		input       string
-		expected    Log
-		expectedErr bool
+		input    string
+		expected ParseLineOutput
 	}{
 		"standard log": {
 			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=50ms",
-			expected: Log{
-				Time:     time.Date(2026, 01, 01, 0, 0, 0, 0, time.UTC),
-				Level:    Warning,
-				Service:  "test",
-				Message:  "hey",
-				Duration: 50 * time.Millisecond,
-				Extra:    map[string]string{},
+			expected: ParseLineOutput{
+				Log: Log{
+					Time:     time.Date(2026, 01, 01, 0, 0, 0, 0, time.UTC),
+					Level:    Warning,
+					Service:  "test",
+					Message:  "hey",
+					Duration: 50 * time.Millisecond,
+					Extra:    map[string]string{},
+				},
 			},
 		},
 		"invalid: invalid service": {
-			input:       "2026-01-01T00:00:00Z INVALID_SERVICE service=test message=hey duration=50ms",
-			expectedErr: true,
+			input: "2026-01-01T00:00:00Z INVALID_SERVICE service=test message=hey duration=50ms",
+			expected: ParseLineOutput{
+				Err: &ValueError{
+					ExpectedValue: "",
+					ErroredValue:  "level",
+				},
+			},
+		},
+		"invalid: not enough mandatory arguments": {
+			input: "2026-01-01T00:00:00Z",
+			expected: ParseLineOutput{
+				Err: &ParseError{Reason: "Not enough arguments - expected 2 - found 1"},
+			},
 		},
 		"invalid: invalid date": {
-			input:       "INVALID_DATE WARNING service=test message=hey duration=50ms",
-			expectedErr: true,
+			input: "INVALID_DATE WARNING service=test message=hey duration=50ms",
+			expected: ParseLineOutput{
+				Err: &ValueError{
+					ExpectedValue: "time format - RFC3339",
+					ErroredValue:  "INVALID_DATE",
+				},
+			},
 		},
-		"invalid: invalid duration": {
+		"invalid: invalid duration in seconds instead of ms": {
 			// duration should (for now) only be in milliseconds
-			input:       "2026-01-01T00:00:00Z WARNING service=test message=hey duration=50s",
-			expectedErr: true,
+			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=50s",
+			expected: ParseLineOutput{
+				Err: &ValueError{
+					ExpectedValue: "duration value in milliseconds on format xxxms",
+					ErroredValue:  "50s",
+				},
+			},
+		},
+		"invalid: invalid duration is not a number": {
+			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=NaNms",
+			expected: ParseLineOutput{
+				Err: &ValueError{
+					ExpectedValue: "duration value in milliseconds on format xxxms",
+					ErroredValue:  "NaNms",
+				},
+			},
 		},
 		"invalid: missing field": {
-			// duration should (for now) only be in milliseconds
-			input:       "2026-01-01T00:00:00Z WARNING service=test duration=50s",
-			expectedErr: true,
+			input: "2026-01-01T00:00:00Z WARNING service=test duration=50ms",
+			expected: ParseLineOutput{
+				Err: &ValueError{
+					ExpectedValue: "message field, service field, and duration field, should not be empty.",
+					ErroredValue:  "message: , service: test, duration: 50000000",
+				},
+			},
+		},
+		"wrong format key=value pairs": {
+			input: "2026-01-01T00:00:00Z WARNING service=test=api duration=50ms",
+			expected: ParseLineOutput{
+				Err: &ParseError{Reason: "Wrong format in key-values design (found [service test api])"},
+			},
 		},
 		"log with sentence as message": {
 			input: "2026-01-01T00:00:00Z WARNING service=test message=\"this log is very important\" duration=50ms",
-			expected: Log{
-				Time:     time.Date(2026, 01, 01, 0, 0, 0, 0, time.UTC),
-				Level:    Warning,
-				Service:  "test",
-				Message:  "\"this log is very important\"",
-				Duration: 50 * time.Millisecond,
-				Extra:    map[string]string{},
+			expected: ParseLineOutput{
+				Log: Log{
+					Time:     time.Date(2026, 01, 01, 0, 0, 0, 0, time.UTC),
+					Level:    Warning,
+					Service:  "test",
+					Message:  "\"this log is very important\"",
+					Duration: 50 * time.Millisecond,
+					Extra:    map[string]string{},
+				},
 			},
 		},
 	}
@@ -58,16 +105,12 @@ func TestParseLineLog(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			log, err := parseLine(test.input)
-			if (err != nil) != test.expectedErr {
-				t.Fatalf(
-					"%s: unexpected err behavior - got %t, expected %t (err: %s)",
-					name,
-					err != nil,
-					test.expectedErr,
-					err,
-				)
+			output := ParseLineOutput{
+				Log: log,
+				Err: err,
 			}
-			if diff := cmp.Diff(test.expected, log); diff != "" {
+
+			if diff := cmp.Diff(test.expected, output); diff != "" {
 				t.Fatal(diff)
 			}
 		})

@@ -10,6 +10,9 @@ func validateLog(log parser.Log) bool {
 	if log.Service == "" {
 		return false
 	}
+	if log.Duration < 0 {
+		return false
+	}
 	return true
 }
 
