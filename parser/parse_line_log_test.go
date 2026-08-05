@@ -3,6 +3,8 @@ package parser
 import (
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestParseLineLog(t *testing.T) {
@@ -19,6 +21,7 @@ func TestParseLineLog(t *testing.T) {
 				Service:  "test",
 				Message:  "hey",
 				Duration: 50 * time.Millisecond,
+				Extra:    map[string]string{},
 			},
 		},
 		"invalid: invalid service": {
@@ -47,6 +50,7 @@ func TestParseLineLog(t *testing.T) {
 				Service:  "test",
 				Message:  "\"this log is very important\"",
 				Duration: 50 * time.Millisecond,
+				Extra:    map[string]string{},
 			},
 		},
 	}
@@ -63,16 +67,109 @@ func TestParseLineLog(t *testing.T) {
 					err,
 				)
 			}
-			if (log == nil) && test.expected.Equal(Log{}) {
-				return
+			if diff := cmp.Diff(test.expected, log); diff != "" {
+				t.Fatal(diff)
 			}
-			if !(*log).Equal(test.expected) {
-				t.Fatalf(
-					"%s: expected %s - got %s",
-					name,
-					test.expected,
-					log,
-				)
+		})
+	}
+}
+
+func TestParseLogContent(t *testing.T) {
+	type ParseLogOutput struct {
+		Log []*Log
+		Err []error
+	}
+
+	tests := map[string]struct {
+		inputContent  string
+		inputSettings ParseSettings
+		expected      ParseLogOutput
+	}{
+		"no content should return nothing": {
+			inputContent:  "",
+			inputSettings: ParseSettings{},
+			expected:      ParseLogOutput{},
+		},
+		"invalid log should return an error": {
+			inputContent:  "INVALID LOG",
+			inputSettings: ParseSettings{},
+			expected: ParseLogOutput{
+				Err: []error{&ValueError{
+					ErroredValue:  "INVALID",
+					ExpectedValue: "time format - RFC3339",
+				}},
+			},
+		},
+		"valid log should parse it": {
+			inputContent:  "2026-01-01T00:00:00Z WARNING service=database duration=50ms message=\"query executed\"",
+			inputSettings: ParseSettings{},
+			expected: ParseLogOutput{
+				Log: []*Log{
+					{
+						Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+						Level:    Warning,
+						Service:  "database",
+						Duration: 50 * time.Millisecond,
+						Message:  `"query executed"`,
+						Extra:    map[string]string{},
+					},
+				},
+			},
+		},
+		"log with extra fields should add it": {
+			inputContent:  "2026-01-01T00:00:00Z WARNING service=database duration=50ms message=\"query executed\" hey=0 extra_field=\"an extra field\"",
+			inputSettings: ParseSettings{},
+			expected: ParseLogOutput{
+				Log: []*Log{
+					{
+						Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+						Level:    Warning,
+						Service:  "database",
+						Duration: 50 * time.Millisecond,
+						Message:  `"query executed"`,
+						Extra: map[string]string{
+							"hey":         "0",
+							"extra_field": `"an extra field"`,
+						},
+					},
+				},
+			},
+		},
+		"multiple logs should add them": {
+			inputContent:  "2026-01-01T00:00:00Z WARNING service=database duration=50ms message=\"query executed\"\n2026-01-02T01:00:00Z INFO service=api duration=10ms message=ok",
+			inputSettings: ParseSettings{},
+			expected: ParseLogOutput{
+				Log: []*Log{
+					{
+						Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+						Level:    Warning,
+						Service:  "database",
+						Duration: 50 * time.Millisecond,
+						Message:  `"query executed"`,
+						Extra:    map[string]string{},
+					},
+					{
+						Time:     time.Date(2026, 1, 2, 1, 0, 0, 0, time.UTC),
+						Level:    Info,
+						Service:  "api",
+						Message:  "ok",
+						Duration: 10 * time.Millisecond,
+						Extra:    map[string]string{},
+					},
+				},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			log, err := parseLog(test.inputContent, &test.inputSettings)
+			output := ParseLogOutput{
+				Log: log,
+				Err: err,
+			}
+			if diff := cmp.Diff(test.expected, output); diff != "" {
+				t.Fatal(diff)
 			}
 		})
 	}

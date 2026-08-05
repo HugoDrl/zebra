@@ -6,10 +6,24 @@ import (
 	"time"
 )
 
+func validateLog(log parser.Log) bool {
+	if log.Service == "" {
+		return false
+	}
+	return true
+}
+
 func (m *CollectionMetric) handleService(log *parser.Log) {
-	s := m.ServicePerformance[log.Service]
-	if s == nil {
-		s = &ServiceMetric{
+	if log == nil {
+		return
+	}
+	if !validateLog(*log) {
+		return
+	}
+
+	s, ok := m.ServicePerformance[log.Service]
+	if !ok {
+		s = ServiceMetric{
 			Name: log.Service,
 		}
 	}
@@ -19,6 +33,7 @@ func (m *CollectionMetric) handleService(log *parser.Log) {
 	s.AverageDuration += log.Duration
 	s.AverageDuration /= time.Duration(s.Lines)
 	m.ServicePerformance[log.Service] = s
+	m.Lines[log.Level]++
 }
 
 func (m *CollectionMetric) handleSlowestLogs(

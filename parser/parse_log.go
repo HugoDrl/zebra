@@ -8,25 +8,25 @@ import (
 	"time"
 )
 
-func parseLine(line string) (*Log, error) {
+func parseLine(line string) (Log, error) {
 	words := splitLine(line)
 	if len(words) < 2 {
-		return nil, &ParseError{Reason: fmt.Sprintf("Not enough arguments - expected 2 - found %d", len(words))}
+		return Log{}, &ParseError{Reason: fmt.Sprintf("Not enough arguments - expected 2 - found %d", len(words))}
 	}
 
 	date, err := time.Parse(time.RFC3339, words[0])
 	if err != nil {
-		return nil, &ValueError{ExpectedValue: "time format - RFC3339", ErroredValue: words[0]}
+		return Log{}, &ValueError{ExpectedValue: "time format - RFC3339", ErroredValue: words[0]}
 	}
 
 	l := strings.TrimFunc(words[1], func(l rune) bool { return l == '[' || l == ']' })
 	level, ok := toLevel(strings.ToLower(l))
 	if !ok {
-		return nil, &ValueError{
+		return Log{}, &ValueError{
 			ErroredValue: "level",
 		}
 	}
-	fields := make(map[string]string, 0)
+	fields := make(map[string]string)
 	var message string
 	var service string
 	var duration time.Duration
@@ -36,7 +36,7 @@ func parseLine(line string) (*Log, error) {
 		}
 		f := strings.Split(word, "=")
 		if len(f) != 2 {
-			return nil, &ParseError{Reason: fmt.Sprintf("Wrong format in key-values design (found %v)", f)}
+			return Log{}, &ParseError{Reason: fmt.Sprintf("Wrong format in key-values design (found %v)", f)}
 		}
 		title := strings.ToLower(f[0])
 
@@ -47,11 +47,11 @@ func parseLine(line string) (*Log, error) {
 			service = f[1]
 		case "duration":
 			if f[1][len(f[1])-2:] != "ms" {
-				return nil, &ValueError{ExpectedValue: "duration value in milliseconds on format xxxms", ErroredValue: f[1]}
+				return Log{}, &ValueError{ExpectedValue: "duration value in milliseconds on format xxxms", ErroredValue: f[1]}
 			}
 			value, err := strconv.Atoi(f[1][:len(f[1])-2])
 			if err != nil {
-				return nil, &ValueError{ExpectedValue: "duration value in milliseconds on format xxxms", ErroredValue: f[1]}
+				return Log{}, &ValueError{ExpectedValue: "duration value in milliseconds on format xxxms", ErroredValue: f[1]}
 			}
 
 			duration = time.Duration(value * int(time.Millisecond))
@@ -60,18 +60,19 @@ func parseLine(line string) (*Log, error) {
 		}
 	}
 	if message == "" || service == "" || duration == 0 {
-		return nil, &ValueError{ExpectedValue: "message field, service field, and duration field, should not be empty.", ErroredValue: fmt.Sprintf("message: %s, service: %s, duration: %d", message, service, duration)}
+		return Log{}, &ValueError{ExpectedValue: "message field, service field, and duration field, should not be empty.", ErroredValue: fmt.Sprintf("message: %s, service: %s, duration: %d", message, service, duration)}
 	}
-	return &Log{
+	return Log{
 		Time:     date,
 		Level:    level,
 		Message:  message,
 		Service:  service,
-		extra:    fields,
+		Extra:    fields,
 		Duration: duration,
 	}, nil
 }
 
+// TODO: think about pointer retrieval -> should it ?
 func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 	lines := strings.Split(content, "\n")
 	var logs []*Log
@@ -83,18 +84,20 @@ func parseLog(content string, settings *ParseSettings) ([]*Log, []error) {
 		}
 		if log, err := parseLine(line); err != nil {
 			var valueErr *ValueError
+			// TODO: change errors checking
 			if errors.As(err, &valueErr) {
 				valueErr.Line = line_no
 			}
 			logsErrors = append(logsErrors, err)
-		} else if filterLogs(log, settings) {
-			logs = append(logs, log)
+		} else if filterLogs(&log, settings) {
+			logs = append(logs, &log)
 		}
 	}
 
 	return logs, logsErrors
 }
 
+// FIXME: I don't think parser package should actually handle file reading
 func ParseFile(file string, settings *ParseSettings) ([]*Log, []error) {
 	logsParsed := make([]*Log, 0)
 	logsErr := make([]error, 0)
