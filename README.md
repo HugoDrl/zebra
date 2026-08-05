@@ -24,6 +24,9 @@ DATE [LEVEL] service=SERVICE message=MESSAGE duration=DURATION PROPS
 - **DURATION** is the duration of the process, in milliseconds, in the format XXXXms
 - **PROPS** is one or multiple key-value pairs, in the format key=value, separated by spaces
 
+### JSON format
+JSON format is currently not supported, but the tool will evolve to handle multiple formats.
+
 
 ## Flags
 When using this tool, it is possible to add flags to modify behavior. Some flags are necessary, some are optionals.
