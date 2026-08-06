@@ -32,7 +32,7 @@ func TestParseLineLog(t *testing.T) {
 			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=50ms",
 			expected: ParseLineOutput{
 				Log: Log{
-					Time:     time.Date(2026, 01, 01, 0, 0, 0, 0, time.UTC),
+					Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 					Level:    Warning,
 					Service:  "test",
 					Message:  "hey",
@@ -103,7 +103,7 @@ func TestParseLineLog(t *testing.T) {
 			input: "2026-01-01T00:00:00Z WARNING service=test message=\"this log is very important\" duration=50ms",
 			expected: ParseLineOutput{
 				Log: Log{
-					Time:     time.Date(2026, 01, 01, 0, 0, 0, 0, time.UTC),
+					Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 					Level:    Warning,
 					Service:  "test",
 					Message:  "\"this log is very important\"",

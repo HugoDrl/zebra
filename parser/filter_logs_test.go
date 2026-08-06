@@ -7,7 +7,7 @@ import (
 
 func TestLogFilter(t *testing.T) {
 	testLog := &Log{
-		Time:     time.Date(2026, 01, 01, 0, 0, 0, 0, time.UTC),
+		Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 		Level:    Error,
 		Duration: 5 * time.Second,
 		Message:  "\"response time out \"",
@@ -22,21 +22,21 @@ func TestLogFilter(t *testing.T) {
 	}{
 		"filter by date that includes the log": {
 			input: ParseSettings{
-				StartDate: time.Date(2025, 01, 01, 0, 0, 0, 0, time.UTC),
-				EndDate:   time.Date(2027, 01, 01, 0, 0, 0, 0, time.UTC),
+				StartDate: time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+				EndDate:   time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC),
 			},
 			expected: true,
 		},
 		"filter by end date that does not include the log": {
 			input: ParseSettings{
-				StartDate: time.Date(2025, 01, 01, 0, 0, 0, 0, time.UTC),
-				EndDate:   time.Date(2025, 11, 01, 0, 0, 0, 0, time.UTC),
+				StartDate: time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+				EndDate:   time.Date(2025, 11, 1, 0, 0, 0, 0, time.UTC),
 			},
 			expected: false,
 		},
 		"filter by start date that does not include the log": {
 			input: ParseSettings{
-				StartDate: time.Date(2027, 01, 01, 0, 0, 0, 0, time.UTC),
+				StartDate: time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC),
 			},
 			expected: false,
 		},
@@ -48,7 +48,7 @@ func TestLogFilter(t *testing.T) {
 		},
 		"filter by date that includes, but service that does not include log": {
 			input: ParseSettings{
-				StartDate: time.Date(2025, 01, 01, 0, 0, 0, 0, time.UTC),
+				StartDate: time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
 				Service:   "db",
 			},
 			expected: false,
