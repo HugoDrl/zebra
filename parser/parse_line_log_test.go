@@ -206,7 +206,7 @@ func TestParseLogContent(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			log, err := parseLog(test.inputContent, &test.inputSettings)
+			log, err := ParseLogContent(test.inputContent, &test.inputSettings)
 			output := ParseLogOutput{
 				Log: log,
 				Err: err,
