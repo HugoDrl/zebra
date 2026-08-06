@@ -70,7 +70,7 @@ func TestLogFilter(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			output := filterLogs(testLog, &test.input)
+			output := filterLog(testLog, &test.input)
 			if output != test.expected {
 				t.Fatalf("%s: expected %t - got %t", name, test.expected, output)
 			}

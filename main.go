@@ -14,41 +14,19 @@ import (
 	"github.com/HugoDrl/LogParser/parser"
 )
 
-func ProcessFiles(settings *parser.ParseSettings, outChan chan<- *parser.Log, errsChan chan<- error, wg *sync.WaitGroup) {
+func ProcessFiles(
+	settings *parser.ParseSettings,
+	outChan chan<- *parser.Log,
+	errsChan chan<- error,
+	wg *sync.WaitGroup,
+) {
 	for _, filepath := range settings.Files {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			reader, _ := os.Open(filepath)
 			content, _ := io.ReadAll(reader)
-			values, errors := parser.ParseLogContent(string(content), settings)
-			for len(values) > 0 || len(errors) > 0 {
-				// This loop is used to feed both outChan and errsChan
-				// closableChannels are used to make a 'buffer' to not trigger if empty
-				// TODO: find a clearer solution
-				var closableOutChan chan<- *parser.Log
-				var closableErrsChan chan<- error
-				var v *parser.Log
-				var e error
-
-				if len(values) > 0 {
-					v = values[len(values)-1]
-					closableOutChan = outChan
-				}
-
-				if len(errors) > 0 {
-					e = errors[len(errors)-1]
-					closableErrsChan = errsChan
-				}
-
-				select {
-				case closableOutChan <- v:
-					values = values[:len(values)-1]
-
-				case closableErrsChan <- e:
-					errors = errors[:len(errors)-1]
-				}
-			}
+			parser.ParseLogContent(string(content), settings, outChan, errsChan)
 		}()
 	}
 }
