@@ -7,6 +7,18 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func emptyChan[T any](channel chan T) []T {
+	close(channel)
+	array := make([]T, 0)
+	for value := range channel {
+		array = append(array, value)
+	}
+	if len(array) == 0 {
+		return nil
+	}
+	return array
+}
+
 func TestParseLineLog(t *testing.T) {
 	type ParseLineOutput struct {
 		Log Log
@@ -128,10 +140,17 @@ func TestParseLogContent(t *testing.T) {
 		inputSettings ParseSettings
 		expected      ParseLogOutput
 	}{
-		"no content should return nothing": {
+		"no content should return a parsing error": {
 			inputContent:  "",
 			inputSettings: ParseSettings{},
-			expected:      ParseLogOutput{},
+			expected: ParseLogOutput{
+				Err: []error{
+					&ParseError{
+						Line:   0,
+						Reason: "Not enough arguments - expected 2 - found 0",
+					},
+				},
+			},
 		},
 		"invalid log should return an error": {
 			inputContent:  "INVALID LOG",
@@ -206,10 +225,13 @@ func TestParseLogContent(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			log, err := ParseLogContent(test.inputContent, &test.inputSettings)
+			logChan := make(chan *Log, 100)
+			errChan := make(chan error, 100)
+			ParseLogContent(test.inputContent, &test.inputSettings, logChan, errChan)
+
 			output := ParseLogOutput{
-				Log: log,
-				Err: err,
+				Log: emptyChan(logChan),
+				Err: emptyChan(errChan),
 			}
 			if diff := cmp.Diff(test.expected, output); diff != "" {
 				t.Fatal(diff)
