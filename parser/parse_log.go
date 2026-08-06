@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -72,27 +71,20 @@ func parseLine(line string) (Log, error) {
 	}, nil
 }
 
-// TODO: think about pointer retrieval -> should it ?
-func ParseLogContent(content string, settings *ParseSettings) ([]*Log, []error) {
-	lines := strings.Split(content, "\n")
-	var logs []*Log
-	var logsErrors []error
+func ParseLogContent(
+	content string,
+	settings *ParseSettings,
+	outChan chan<- *Log,
+	errsChan chan<- error,
+) {
+	lines := strings.Split(string(content), "\n")
 
-	for line_no, line := range lines {
-		if line == "" {
-			continue
-		}
-		if log, err := parseLine(line); err != nil {
-			var valueErr *ValueError
-			// TODO: change errors checking
-			if errors.As(err, &valueErr) {
-				valueErr.Line = line_no
-			}
-			logsErrors = append(logsErrors, err)
-		} else if filterLogs(&log, settings) {
-			logs = append(logs, &log)
+	for _, line := range lines {
+		log, err := parseLine(line)
+		if err != nil {
+			errsChan <- err
+		} else if filterLog(&log, settings) {
+			outChan <- &log
 		}
 	}
-
-	return logs, logsErrors
 }

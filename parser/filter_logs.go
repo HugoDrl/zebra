@@ -1,6 +1,6 @@
 package parser
 
-func filterLogs(log *Log, filters *ParseSettings) bool {
+func filterLog(log *Log, filters *ParseSettings) bool {
 	if !filters.StartDate.IsZero() && log.Time.Compare(filters.StartDate) < 0 {
 		return false
 	}
