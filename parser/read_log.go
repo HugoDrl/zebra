@@ -1,18 +1,5 @@
 package parser
 
-import (
-	"os"
-)
-
-// TODO: parser should not be responsible for file reading
-func readFile(filename string) ([]byte, error) {
-	c, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, &FileError{File: filename, Err: err}
-	}
-	return c, nil
-}
-
 func splitLine(line string) []string {
 	splitBySpace := true
 	words := make([]string, 0)
