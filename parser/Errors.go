@@ -2,12 +2,13 @@ package parser
 
 import "fmt"
 
+// TODO: FileError is currently never initialized in production code
+// It was in the past when the parser used its own methods to read files
 type FileError struct {
 	File string
 	Err  error
 }
 
-// TODO: Error should not (i think) be using pointers here
 func (e *FileError) Error() string {
 	return fmt.Sprintf("Error encountered on file %s - %s", e.File, e.Err)
 }
