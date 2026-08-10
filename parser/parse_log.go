@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func parseLine(line string) (Log, error) {
+func ParseLine(line string) (Log, error) {
 	words := splitLine(line)
 	if len(words) < 2 {
 		return Log{}, &ParseError{Reason: fmt.Sprintf("Not enough arguments - expected 2 - found %d", len(words))}
@@ -69,22 +69,4 @@ func parseLine(line string) (Log, error) {
 		Extra:    fields,
 		Duration: duration,
 	}, nil
-}
-
-func ParseLogContent(
-	content string,
-	settings *ParseSettings,
-	outChan chan<- *Log,
-	errsChan chan<- error,
-) {
-	lines := strings.Split(string(content), "\n")
-
-	for _, line := range lines {
-		log, err := parseLine(line)
-		if err != nil {
-			errsChan <- err
-		} else if filterLog(&log, settings) {
-			outChan <- &log
-		}
-	}
 }

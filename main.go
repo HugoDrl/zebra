@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"sync"
@@ -14,6 +14,27 @@ import (
 	"github.com/HugoDrl/LogParser/parser"
 )
 
+func extractLinesFromFile(reader *bufio.Reader, outChan chan<- *parser.Log, errsChan chan<- error) {
+	scanner := bufio.NewScanner(reader)
+
+	for {
+		if ok := scanner.Scan(); !ok {
+			if err := scanner.Err(); err != nil {
+				errsChan <- err
+			}
+			return
+		}
+		contentLine := scanner.Text()
+
+		log, err := parser.ParseLine(string(contentLine))
+		if err != nil {
+			errsChan <- err
+		} else {
+			outChan <- &log
+		}
+	}
+}
+
 func ProcessFiles(
 	settings *parser.ParseSettings,
 	outChan chan<- *parser.Log,
@@ -21,13 +42,15 @@ func ProcessFiles(
 	wg *sync.WaitGroup,
 ) {
 	for _, filepath := range settings.Files {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			reader, _ := os.Open(filepath)
-			content, _ := io.ReadAll(reader)
-			parser.ParseLogContent(string(content), settings, outChan, errsChan)
-		}()
+		wg.Go(func() {
+			reader, err := os.OpenFile(filepath, os.O_RDONLY, 0)
+			if err != nil {
+				errsChan <- err
+				return
+			}
+			r := bufio.NewReader(reader)
+			extractLinesFromFile(r, outChan, errsChan)
+		})
 	}
 }
 
