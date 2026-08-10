@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/HugoDrl/LogParser/parser"
+	"github.com/HugoDrl/zebra/parser"
 )
 
 type CollectionMetric struct {

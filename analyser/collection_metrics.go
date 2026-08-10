@@ -1,9 +1,10 @@
 package analyser
 
 import (
-	"github.com/HugoDrl/LogParser/parser"
 	"sort"
 	"time"
+
+	"github.com/HugoDrl/zebra/parser"
 )
 
 func validateLog(log parser.Log) bool {

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HugoDrl/LogParser/analyser"
-	"github.com/HugoDrl/LogParser/parser"
+	"github.com/HugoDrl/zebra/analyser"
+	"github.com/HugoDrl/zebra/parser"
 	"github.com/google/go-cmp/cmp"
 )
 

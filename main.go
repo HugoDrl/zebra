@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/HugoDrl/LogParser/analyser"
-	"github.com/HugoDrl/LogParser/parser"
+	"github.com/HugoDrl/zebra/analyser"
+	"github.com/HugoDrl/zebra/parser"
 )
 
 func extractLinesFromFile(reader *bufio.Reader, outChan chan<- *parser.Log, errsChan chan<- error) {

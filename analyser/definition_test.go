@@ -3,7 +3,7 @@ package analyser
 import (
 	"testing"
 
-	"github.com/HugoDrl/LogParser/parser"
+	"github.com/HugoDrl/zebra/parser"
 	"github.com/google/go-cmp/cmp"
 )
 

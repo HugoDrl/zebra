@@ -1,4 +1,4 @@
-module github.com/HugoDrl/LogParser
+module github.com/HugoDrl/zebra
 
 go 1.26.5
 
