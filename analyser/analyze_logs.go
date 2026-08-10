@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/HugoDrl/LogParser/parser"
+	"github.com/HugoDrl/zebra/parser"
 )
 
 func AnalyseLogs(

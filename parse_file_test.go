@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	zebra "github.com/HugoDrl/LogParser"
-	"github.com/HugoDrl/LogParser/parser"
+	zebra "github.com/HugoDrl/zebra"
+	"github.com/HugoDrl/zebra/parser"
 	"github.com/google/go-cmp/cmp"
 )
 
