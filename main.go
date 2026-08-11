@@ -26,7 +26,7 @@ func extractLinesFromFile(reader *bufio.Reader, outChan chan<- *parser.Log, errs
 		}
 		contentLine := scanner.Text()
 
-		log, err := parser.ParseLine(string(contentLine))
+		log, err := parser.ParseDefaultFormatLine(string(contentLine))
 		if err != nil {
 			errsChan <- err
 		} else {

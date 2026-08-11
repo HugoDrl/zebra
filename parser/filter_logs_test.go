@@ -9,7 +9,7 @@ func TestLogFilter(t *testing.T) {
 	testLog := &Log{
 		Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 		Level:    Error,
-		Duration: 5 * time.Second,
+		Duration: Duration(5 * time.Second),
 		Message:  "\"response time out \"",
 		Service:  "api",
 		Extra: map[string]string{

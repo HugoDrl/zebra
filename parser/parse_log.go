@@ -1,13 +1,27 @@
 package parser
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func ParseLine(line string) (Log, error) {
+func ParseJSONFormatLine(line string) (Log, error) {
+	var log Log
+	if err := json.Unmarshal([]byte(line), &log); err != nil {
+		return Log{}, err
+	}
+	if level, ok := toLevel(string(log.Level)); !ok {
+		return Log{}, &ValueError{ErroredValue: "level"}
+	} else {
+		log.Level = level
+	}
+	return log, nil
+}
+
+func ParseDefaultFormatLine(line string) (Log, error) {
 	words := splitLine(line)
 	if len(words) < 2 {
 		return Log{}, &ParseError{Reason: fmt.Sprintf("Not enough arguments - expected 2 - found %d", len(words))}
@@ -67,6 +81,6 @@ func ParseLine(line string) (Log, error) {
 		Message:  message,
 		Service:  service,
 		Extra:    fields,
-		Duration: duration,
+		Duration: Duration(duration),
 	}, nil
 }
