@@ -24,7 +24,7 @@ func TestParseLineLog(t *testing.T) {
 					Level:    Warning,
 					Service:  "test",
 					Message:  "hey",
-					Duration: 50 * time.Millisecond,
+					Duration: Duration(50 * time.Millisecond),
 					Extra:    map[string]string{},
 				},
 			},
@@ -95,7 +95,7 @@ func TestParseLineLog(t *testing.T) {
 					Level:    Warning,
 					Service:  "test",
 					Message:  "\"this log is very important\"",
-					Duration: 50 * time.Millisecond,
+					Duration: Duration(50 * time.Millisecond),
 					Extra:    map[string]string{},
 				},
 			},
@@ -104,7 +104,45 @@ func TestParseLineLog(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			log, err := ParseLine(test.input)
+			log, err := ParseDefaultFormatLine(test.input)
+			output := ParseLineOutput{
+				Log: log,
+				Err: err,
+			}
+
+			if diff := cmp.Diff(test.expected, output); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}
+
+func TestParseJSONLine(t *testing.T) {
+	type ParseLineOutput struct {
+		Log Log
+		Err error
+	}
+	tests := map[string]struct {
+		input    string
+		expected ParseLineOutput
+	}{
+		"valid json log with no extra fields should be parsed just fine": {
+			input: `{"date": "2026-01-01T00:00:00Z", "level": "WARNING", "service": "database", "message": "drop db", "duration": "10ms"}`,
+			expected: ParseLineOutput{
+				Log: Log{
+					Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+					Level:    Warning,
+					Service:  "database",
+					Message:  "drop db",
+					Duration: Duration(10 * time.Millisecond),
+				},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			log, err := ParseJSONFormatLine(test.input)
 			output := ParseLineOutput{
 				Log: log,
 				Err: err,

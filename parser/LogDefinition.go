@@ -32,12 +32,26 @@ func toLevel(input string) (Level, bool) {
 	}
 }
 
+// This is necessary as current format for duration is not supported by JSON native unmarshaller.
+type Duration time.Duration
+
+func (d *Duration) UnmarshalJSON(data []byte) error {
+	sdata := string(data)
+	sdata = strings.Trim(sdata, `"`)
+	durationParsed, err := time.ParseDuration(sdata)
+	if err != nil {
+		return err
+	}
+	*d = Duration(durationParsed)
+	return nil
+}
+
 type Log struct {
-	Time     time.Time
-	Level    Level
-	Duration time.Duration
-	Message  string
-	Service  string
+	Time     time.Time `json:"date"`
+	Level    Level     `json:"level"`
+	Duration Duration  `json:"duration"`
+	Message  string    `json:"message"`
+	Service  string    `json:"service"`
 	Extra    map[string]string
 }
 

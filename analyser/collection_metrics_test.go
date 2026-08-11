@@ -39,7 +39,7 @@ func TestHandleService(t *testing.T) {
 		},
 		"api log should increase the same ServiceMetric": {
 			input: &parser.Log{
-				Duration: 44 * time.Millisecond,
+				Duration: parser.Duration(44 * time.Millisecond),
 				Service:  "api",
 				Level:    parser.Info,
 			},
@@ -57,7 +57,7 @@ func TestHandleService(t *testing.T) {
 		},
 		"other service log should create a new ServiceMetric": {
 			input: &parser.Log{
-				Duration: 100 * time.Millisecond,
+				Duration: parser.Duration(100 * time.Millisecond),
 				Service:  "database",
 				Level:    parser.Info,
 			},
@@ -74,7 +74,7 @@ func TestHandleService(t *testing.T) {
 		},
 		"happending a log with a different duration should modify average properly": {
 			input: &parser.Log{
-				Duration: 100 * time.Millisecond,
+				Duration: parser.Duration(100 * time.Millisecond),
 				Service:  "api",
 				Level:    parser.Error,
 			},
@@ -117,14 +117,14 @@ func TestSlowestLogsHandler(t *testing.T) {
 		"adding one log to metrics with size 1 should add it": {
 			input: SlowestLogsInput{
 				logs: []parser.Log{
-					{Duration: 12 * time.Millisecond},
+					{Duration: parser.Duration(12 * time.Millisecond)},
 				},
 				slowestLogsSize: 1,
 			},
 			expected: func() CollectionMetric {
 				metric := getDefaultMetric()
 				metric.SlowestInput = []*parser.Log{
-					{Duration: 12 * time.Millisecond},
+					{Duration: parser.Duration(12 * time.Millisecond)},
 				}
 				return metric
 			}(),
@@ -132,7 +132,7 @@ func TestSlowestLogsHandler(t *testing.T) {
 		"adding one entry to metrics with size 0 should not add it": {
 			input: SlowestLogsInput{
 				logs: []parser.Log{
-					{Duration: 12 * time.Millisecond},
+					{Duration: parser.Duration(12 * time.Millisecond)},
 				},
 				slowestLogsSize: 0,
 			},
@@ -141,16 +141,16 @@ func TestSlowestLogsHandler(t *testing.T) {
 		"adding more entries to metrics with size 1 should add the slowest": {
 			input: SlowestLogsInput{
 				logs: []parser.Log{
-					{Duration: 20 * time.Millisecond},
-					{Duration: 10 * time.Millisecond},
-					{Duration: 12 * time.Millisecond},
+					{Duration: parser.Duration(20 * time.Millisecond)},
+					{Duration: parser.Duration(10 * time.Millisecond)},
+					{Duration: parser.Duration(12 * time.Millisecond)},
 				},
 				slowestLogsSize: 1,
 			},
 			expected: func() CollectionMetric {
 				metric := getDefaultMetric()
 				metric.SlowestInput = []*parser.Log{
-					{Duration: 20 * time.Millisecond},
+					{Duration: parser.Duration(20 * time.Millisecond)},
 				}
 				return metric
 			}(),
@@ -158,16 +158,16 @@ func TestSlowestLogsHandler(t *testing.T) {
 		"adding two entries to metrics with size 5 should add both": {
 			input: SlowestLogsInput{
 				logs: []parser.Log{
-					{Duration: 12 * time.Millisecond},
-					{Duration: 20 * time.Millisecond},
+					{Duration: parser.Duration(12 * time.Millisecond)},
+					{Duration: parser.Duration(20 * time.Millisecond)},
 				},
 				slowestLogsSize: 5,
 			},
 			expected: func() CollectionMetric {
 				metric := getDefaultMetric()
 				metric.SlowestInput = []*parser.Log{
-					{Duration: 12 * time.Millisecond},
-					{Duration: 20 * time.Millisecond},
+					{Duration: parser.Duration(12 * time.Millisecond)},
+					{Duration: parser.Duration(20 * time.Millisecond)},
 				}
 				return metric
 			}(),
@@ -200,7 +200,7 @@ func TestValidateLog(t *testing.T) {
 			input: parser.Log{
 				Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				Service:  "api",
-				Duration: 50 * time.Millisecond,
+				Duration: parser.Duration(50 * time.Millisecond),
 			},
 			expected: true,
 		},
@@ -208,7 +208,7 @@ func TestValidateLog(t *testing.T) {
 			input: parser.Log{
 				Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				Service:  "",
-				Duration: 50 * time.Millisecond,
+				Duration: parser.Duration(50 * time.Millisecond),
 			},
 			expected: false,
 		},
@@ -216,7 +216,7 @@ func TestValidateLog(t *testing.T) {
 			input: parser.Log{
 				Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				Service:  "api",
-				Duration: -50 * time.Millisecond,
+				Duration: parser.Duration(-50 * time.Millisecond),
 			},
 			expected: false,
 		},
