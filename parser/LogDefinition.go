@@ -47,12 +47,12 @@ func (d *Duration) UnmarshalJSON(data []byte) error {
 }
 
 type Log struct {
-	Time     time.Time `json:"date"`
-	Level    Level     `json:"level"`
-	Duration Duration  `json:"duration"`
-	Message  string    `json:"message"`
-	Service  string    `json:"service"`
-	Extra    map[string]string
+	Time     time.Time         `json:"date"`
+	Level    Level             `json:"level"`
+	Duration Duration          `json:"duration"`
+	Message  string            `json:"message"`
+	Service  string            `json:"service"`
+	Extra    map[string]string `json:"-"`
 }
 
 type ParseSettings struct {
