@@ -3,21 +3,62 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 )
 
+func getConsumedJSONFields(t reflect.Type) map[string]struct{} {
+	foundFields := make(map[string]struct{}, t.NumField())
+	for field := range t.Fields() {
+		value, ok := field.Tag.Lookup("json")
+		if !ok {
+			continue
+		}
+		foundFields[value] = struct{}{}
+	}
+	return foundFields
+}
+
+func parseJSONExtraArguments(t reflect.Type, line string) (map[string]string, error) {
+	var extras map[string]string
+	if err := json.Unmarshal([]byte(line), &extras); err != nil {
+		return nil, &ParseError{
+			Reason: err.Error(),
+		}
+	}
+	logFields := getConsumedJSONFields(t)
+	for key := range extras {
+		if _, ok := logFields[key]; ok {
+			delete(extras, key)
+		}
+	}
+	if len(extras) == 0 {
+		extras = nil
+	}
+	return extras, nil
+}
+
 func ParseJSONFormatLine(line string) (Log, error) {
 	var log Log
 	if err := json.Unmarshal([]byte(line), &log); err != nil {
-		return Log{}, err
+		return Log{}, &ParseError{
+			Reason: err.Error(),
+		}
 	}
 	if level, ok := toLevel(string(log.Level)); !ok {
 		return Log{}, &ValueError{ErroredValue: "level"}
 	} else {
 		log.Level = level
 	}
+
+	if extras, err := parseJSONExtraArguments(reflect.TypeFor[Log](), line); err != nil {
+		return Log{}, err
+	} else {
+		log.Extra = extras
+	}
+
 	return log, nil
 }
 

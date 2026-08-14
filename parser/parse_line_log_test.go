@@ -1,115 +1,64 @@
 package parser
 
 import (
+	"reflect"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestParseLineLog(t *testing.T) {
-	type ParseLineOutput struct {
-		Log Log
-		Err error
-	}
+func TestGetConsumedJSONFields(t *testing.T) {
 	tests := map[string]struct {
-		input    string
-		expected ParseLineOutput
+		input    reflect.Type
+		expected map[string]struct{}
 	}{
-		"standard log": {
-			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=50ms",
-			expected: ParseLineOutput{
-				Log: Log{
-					Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-					Level:    Warning,
-					Service:  "test",
-					Message:  "hey",
-					Duration: Duration(50 * time.Millisecond),
-					Extra:    map[string]string{},
-				},
+		"type with all fields consumed by json should return nil": {
+			input: reflect.TypeFor[struct {
+				Test1 int `json:"test1"`
+				Test2 int `json:"test2"`
+			}](),
+			expected: map[string]struct{}{
+				"test1": {},
+				"test2": {},
 			},
 		},
-		"invalid: invalid service": {
-			input: "2026-01-01T00:00:00Z INVALID_SERVICE service=test message=hey duration=50ms",
-			expected: ParseLineOutput{
-				Err: &ValueError{
-					ExpectedValue: "",
-					ErroredValue:  "level",
-				},
+		"no consumed field should return an empty map": {
+			input: reflect.TypeFor[struct {
+				Test1 int
+				Test2 int
+			}](),
+			expected: map[string]struct{}{},
+		},
+		"partially consumed struct return only consumed fields": {
+			input: reflect.TypeFor[struct {
+				Test1 int `json:"test1"`
+				Test2 int
+			}](),
+			expected: map[string]struct{}{
+				"test1": {},
 			},
 		},
-		"invalid: not enough mandatory arguments": {
-			input: "2026-01-01T00:00:00Z",
-			expected: ParseLineOutput{
-				Err: &ParseError{Reason: "Not enough arguments - expected 2 - found 1"},
+		"field with different consumed name than field name should return the consumed name": {
+			input: reflect.TypeFor[struct {
+				Test int `json:"test1"`
+			}](),
+			expected: map[string]struct{}{
+				"test1": {},
 			},
 		},
-		"invalid: invalid date": {
-			input: "INVALID_DATE WARNING service=test message=hey duration=50ms",
-			expected: ParseLineOutput{
-				Err: &ValueError{
-					ExpectedValue: "time format - RFC3339",
-					ErroredValue:  "INVALID_DATE",
-				},
-			},
-		},
-		"invalid: invalid duration in seconds instead of ms": {
-			// duration should (for now) only be in milliseconds
-			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=50s",
-			expected: ParseLineOutput{
-				Err: &ValueError{
-					ExpectedValue: "duration value in milliseconds on format xxxms",
-					ErroredValue:  "50s",
-				},
-			},
-		},
-		"invalid: invalid duration is not a number": {
-			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=NaNms",
-			expected: ParseLineOutput{
-				Err: &ValueError{
-					ExpectedValue: "duration value in milliseconds on format xxxms",
-					ErroredValue:  "NaNms",
-				},
-			},
-		},
-		"invalid: missing field": {
-			input: "2026-01-01T00:00:00Z WARNING service=test duration=50ms",
-			expected: ParseLineOutput{
-				Err: &ValueError{
-					ExpectedValue: "message field, service field, and duration field, should not be empty.",
-					ErroredValue:  "message: , service: test, duration: 50000000",
-				},
-			},
-		},
-		"wrong format key=value pairs": {
-			input: "2026-01-01T00:00:00Z WARNING service=test=api duration=50ms",
-			expected: ParseLineOutput{
-				Err: &ParseError{Reason: "Wrong format in key-values design (found [service test api])"},
-			},
-		},
-		"log with sentence as message": {
-			input: "2026-01-01T00:00:00Z WARNING service=test message=\"this log is very important\" duration=50ms",
-			expected: ParseLineOutput{
-				Log: Log{
-					Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-					Level:    Warning,
-					Service:  "test",
-					Message:  "\"this log is very important\"",
-					Duration: Duration(50 * time.Millisecond),
-					Extra:    map[string]string{},
-				},
+		"unexported field with consumed name should return it properly": {
+			input: reflect.TypeFor[struct {
+				test1 int `json:"test1"`
+			}](),
+			expected: map[string]struct{}{
+				"test1": {},
 			},
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			log, err := ParseDefaultFormatLine(test.input)
-			output := ParseLineOutput{
-				Log: log,
-				Err: err,
-			}
-
+			output := getConsumedJSONFields(test.input)
 			if diff := cmp.Diff(test.expected, output); diff != "" {
 				t.Fatal(diff)
 			}
@@ -117,37 +66,112 @@ func TestParseLineLog(t *testing.T) {
 	}
 }
 
-func TestParseJSONLine(t *testing.T) {
-	type ParseLineOutput struct {
-		Log Log
-		Err error
+func TestParseJSONExtraArgument(t *testing.T) {
+	type ParseJSONInput struct {
+		T    reflect.Type
+		Json string
+	}
+	type ParseJSONOutput struct {
+		Expected    map[string]string
+		ExpectedErr error
 	}
 	tests := map[string]struct {
-		input    string
-		expected ParseLineOutput
+		input    ParseJSONInput
+		expected ParseJSONOutput
 	}{
-		"valid json log with no extra fields should be parsed just fine": {
-			input: `{"date": "2026-01-01T00:00:00Z", "level": "WARNING", "service": "database", "message": "drop db", "duration": "10ms"}`,
-			expected: ParseLineOutput{
-				Log: Log{
-					Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-					Level:    Warning,
-					Service:  "database",
-					Message:  "drop db",
-					Duration: Duration(10 * time.Millisecond),
+		"standard log with no consumed field should return all fields": {
+			input: ParseJSONInput{
+				T: reflect.TypeFor[struct {
+					Test int
+				}](),
+				Json: `{"test": "this is a test"}`,
+			},
+			expected: ParseJSONOutput{
+				Expected: map[string]string{
+					"test": "this is a test",
 				},
+				ExpectedErr: nil,
+			},
+		},
+		"standard log with only consumed field should return no field": {
+			input: ParseJSONInput{
+				T: reflect.TypeFor[struct {
+					Test int `json:"test"`
+				}](),
+				Json: `{"test": "this is a test"}`,
+			},
+			expected: ParseJSONOutput{
+				Expected:    nil,
+				ExpectedErr: nil,
+			},
+		},
+		"invalid json log should return an error": {
+			input: ParseJSONInput{
+				T: reflect.TypeFor[struct {
+					Test int `json:"test"`
+				}](),
+				Json: `{"test": "this is a test"`,
+			},
+			expected: ParseJSONOutput{
+				Expected: nil,
+				ExpectedErr: &ParseError{
+					Reason: "unexpected end of JSON input",
+				},
+			},
+		},
+		"partially consumed fields should return all extras (not consumed)": {
+			input: ParseJSONInput{
+				T: reflect.TypeFor[struct {
+					Test  int `json:"test"`
+					Test2 int `json:"test2"`
+					Test3 int
+				}](),
+				Json: `{"test": "this is a test", "test2": "new test", "test3": "again test"}`,
+			},
+			expected: ParseJSONOutput{
+				Expected: map[string]string{
+					"test3": "again test",
+				},
+				ExpectedErr: nil,
+			},
+		},
+		"struct fields that are not in the json should not be a part of extra fields": {
+			input: ParseJSONInput{
+				T: reflect.TypeFor[struct {
+					Test  int `json:"test"`
+					Test2 int // if present, test2 is going to be an extra field
+				}](),
+				Json: `{"test": "hey hello"}`,
+			},
+			expected: ParseJSONOutput{
+				Expected:    nil,
+				ExpectedErr: nil,
+			},
+		},
+		"fields in json that are not in struct should be an extra field": {
+			input: ParseJSONInput{
+				T: reflect.TypeFor[struct {
+					Test  int `json:"test"`
+					Test2 int `json:"test2"`
+				}](),
+				Json: `{"test": "hey hello", "hello": "how are you", "test2": "test again"}`,
+			},
+			expected: ParseJSONOutput{
+				Expected: map[string]string{
+					"hello": "how are you",
+				},
+				ExpectedErr: nil,
 			},
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			log, err := ParseJSONFormatLine(test.input)
-			output := ParseLineOutput{
-				Log: log,
-				Err: err,
+			args, err := parseJSONExtraArguments(test.input.T, test.input.Json)
+			output := ParseJSONOutput{
+				Expected:    args,
+				ExpectedErr: err,
 			}
-
 			if diff := cmp.Diff(test.expected, output); diff != "" {
 				t.Fatal(diff)
 			}
