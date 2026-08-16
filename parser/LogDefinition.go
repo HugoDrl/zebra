@@ -57,6 +57,7 @@ type Log struct {
 
 type ParseSettings struct {
 	Files     []string
+	Json      bool
 	StartDate time.Time
 	EndDate   time.Time
 	Level     Level
