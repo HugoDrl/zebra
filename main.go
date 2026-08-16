@@ -14,7 +14,7 @@ import (
 	"github.com/HugoDrl/zebra/parser"
 )
 
-func extractLinesFromFile(reader *bufio.Reader, outChan chan<- *parser.Log, errsChan chan<- error) {
+func extractLinesFromFile(reader *bufio.Reader, json bool, outChan chan<- *parser.Log, errsChan chan<- error) {
 	scanner := bufio.NewScanner(reader)
 
 	for {
@@ -26,7 +26,14 @@ func extractLinesFromFile(reader *bufio.Reader, outChan chan<- *parser.Log, errs
 		}
 		contentLine := scanner.Text()
 
-		log, err := parser.ParseDefaultFormatLine(string(contentLine))
+		var log parser.Log
+		var err error
+
+		if json {
+			log, err = parser.ParseJSONFormatLine(string(contentLine))
+		} else {
+			log, err = parser.ParseDefaultFormatLine(string(contentLine))
+		}
 		if err != nil {
 			errsChan <- err
 		} else {
@@ -49,13 +56,14 @@ func ProcessFiles(
 				return
 			}
 			r := bufio.NewReader(reader)
-			extractLinesFromFile(r, outChan, errsChan)
+			extractLinesFromFile(r, settings.Json, outChan, errsChan)
 		})
 	}
 }
 
 func initSettings() (*parser.ParseSettings, *analyser.AnalyserSettings, error) {
 	files := flag.String("files", "", "log files to analyse")
+	json := flag.Bool("json", false, "wether or not format to parse is json")
 	startDate := flag.String("start", "", "logs date to start from")
 	endDate := flag.String("end", "", "logs date to end to")
 	service := flag.String("service", "", "filter logs by service")
@@ -85,6 +93,7 @@ func initSettings() (*parser.ParseSettings, *analyser.AnalyserSettings, error) {
 
 	parsingSettings := parser.ParseSettings{
 		Files:     strings.Split(*files, ","),
+		Json:      *json,
 		StartDate: processedStartDate,
 		EndDate:   processedEndDate,
 		Level:     parser.Level(*level),
