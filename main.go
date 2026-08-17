@@ -50,7 +50,13 @@ func ProcessFiles(
 ) {
 	for _, filepath := range settings.Files {
 		wg.Go(func() {
-			reader, err := os.OpenFile(filepath, os.O_RDONLY, 0)
+			root, err := os.OpenRoot(".")
+			if err != nil {
+				errsChan <- err
+				return
+			}
+			defer root.Close()
+			reader, err := root.OpenFile(filepath, os.O_RDONLY, 0o000)
 			if err != nil {
 				errsChan <- err
 				return
@@ -108,7 +114,7 @@ func initSettings() (*parser.ParseSettings, *analyser.AnalyserSettings, error) {
 func main() {
 	parsingSettings, analyserSettings, err := initSettings()
 	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintln(err))
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
