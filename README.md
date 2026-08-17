@@ -22,11 +22,20 @@ Currently, only one format of logs is supported :
 - **LEVEL** is a string in [DEBUG, INFO, WARNING, ERROR, FATAL]
 - **SERVICE** is a string describing service logged
 - **MESSAGE** is a message
-- **DURATION** is the duration of the process, in milliseconds, in the format XXXXms
+- **DURATION** is the duration of the process, in milliseconds, in the format numberDURATION where DURATION can be h(our)/m(inute)/s(second)/ms(millisecond)
 - **PROPS** is one or multiple key-value pairs, in the format key=value, separated by spaces. This is optionnal
 
 ### JSON format
-JSON format is currently not supported, but the tool will evolve to handle multiple formats.
+
+JSON format is supported and the following rules are to follow:
+
+- The following fields are mandatory:
+    - **date** field needs to be followed by a RFC3339 formatted date string
+    - **service** field is followed by a service compatible string
+    - **message** field is followed by the string message
+    - **duration** field is the duration of the process
+    - any **other** field is going to be an extra field
+    - format and rules applied to default format are the same for json (date, duration, etc)
 
 
 ## Flags
