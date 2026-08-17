@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -126,5 +127,10 @@ func main() {
 	go ProcessFiles(parsingSettings, out, errs)
 
 	metrics := analyser.AnalyseLogs(out, errs, analyserSettings)
-	metrics.Display()
+	if payload, err := json.Marshal(metrics); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	} else {
+		fmt.Println(string(payload))
+	}
 }
