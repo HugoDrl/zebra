@@ -3,7 +3,6 @@ package main_test
 import (
 	"os"
 	"sort"
-	"sync"
 	"testing"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 )
 
 func emptyChan[T any](channel chan T) []T {
-	close(channel)
 	array := make([]T, 0)
 	for value := range channel {
 		array = append(array, value)
@@ -166,9 +164,7 @@ func TestParseLogsFromFile(t *testing.T) {
 			errsChan := make(chan error, 100)
 
 			// Actual tested function
-			var wg sync.WaitGroup
-			zebra.ProcessFiles(&test.inputParseSettings, logChan, errsChan, &wg)
-			wg.Wait()
+			zebra.ProcessFiles(&test.inputParseSettings, logChan, errsChan)
 
 			// Clean files
 			for _, file := range test.inputParseSettings.Files {
