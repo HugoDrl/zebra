@@ -46,8 +46,11 @@ func ProcessFiles(
 	settings *parser.ParseSettings,
 	outChan chan<- *parser.Log,
 	errsChan chan<- error,
-	wg *sync.WaitGroup,
 ) {
+	defer close(outChan)
+	defer close(errsChan)
+	var wg sync.WaitGroup
+	defer wg.Wait()
 	for _, filepath := range settings.Files {
 		wg.Go(func() {
 			root, err := os.OpenRoot(".")
@@ -120,14 +123,7 @@ func main() {
 
 	out := make(chan *parser.Log)
 	errs := make(chan error)
-	var wgFiles sync.WaitGroup
-	ProcessFiles(parsingSettings, out, errs, &wgFiles)
-
-	go func() {
-		wgFiles.Wait()
-		close(out)
-		close(errs)
-	}()
+	go ProcessFiles(parsingSettings, out, errs)
 
 	metrics := analyser.AnalyseLogs(out, errs, analyserSettings)
 	metrics.Display()
