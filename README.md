@@ -5,38 +5,27 @@ Zebra is a CLI tool that allows to read, parse and analyse log files to retrieve
 ## Behavior
 The behavior of the tool is the following  
 Zebra will read one or several log files, given by user. The tool will extract only supported format logs and aggregate them.  
-The aggregations are the following:  
-Logs are aggregated by levels, showing number of lines for each level  
-Logs are aggregated by service, showing for each service:  
-- Number of lines  
-- Average duration of processes  
 Zebra also shows number of errors encountered during parsing (non existing files, format errors, etc) but does not natively give details on those errors.  
 If the user is requesting slowest logs using --top flag, the tool will also give full log lines for slowest logs, depending on the number requested  
 
-## Logs Format
-Currently, only one format of logs is supported :
+## Logs Values
 
-### DATE LEVEL service=SERVICE message=MESSAGE duration=DURATION [PROPS]
+- **date** field is date and time, RFC3339 format (YYYY\-MM\-DDTHH\:MM\:SSZ)
+- **level** field is one of [DEBUG, INFO, WARNING, ERROR, FATAL]
+- **service** is a string
+- **message** is a string
+- **duration** is a duration written with a decimal value, positive or negative, rounded or floatting, followed by one of 'ns', 'us', 'ms', 's', 'm', 'h'
+- **other** fields are optionnal and treated as extras. There can be zero to many other fields, treated as key-value pairs data
 
-- **DATE** is date and time, RFC3339 format (YYYY\-MM\-DDTHH\:MM\:SSZ)
-- **LEVEL** is a string in [DEBUG, INFO, WARNING, ERROR, FATAL]
-- **SERVICE** is a string describing service logged
-- **MESSAGE** is a message
-- **DURATION** is the duration of the process, in milliseconds, in the format numberDURATION where DURATION can be h(our)/m(inute)/s(second)/ms(millisecond)
-- **PROPS** is one or multiple key-value pairs, in the format key=value, separated by spaces. This is optionnal
+### Zebra format
+```c
+DATE LEVEL service=SERVICE message=MESSAGE duration=DURATION other=[EXTRAS]
+```
 
 ### JSON format
-
-JSON format is supported and the following rules are to follow:
-
-- The following fields are mandatory:
-    - **date** field needs to be followed by a RFC3339 formatted date string
-    - **service** field is followed by a service compatible string
-    - **message** field is followed by the string message
-    - **duration** field is the duration of the process
-    - any **other** field is going to be an extra field
-    - format and rules applied to default format are the same for json (date, duration, etc)
-
+```json
+{"date": "DATE", "level": "LEVEL", "message": "MESSAGE", "duration": "DURATION", ["other": "EXTRAS"]}
+```
 
 ## Flags
 When using Zebra, it is possible to add flags to modify behavior. Some flags are necessary, some are optionals.
@@ -48,3 +37,58 @@ When using Zebra, it is possible to add flags to modify behavior. Some flags are
 - **service**: filter logs by service
 - **level**: filter logs by level
 - **top**: number of slowest logs to show
+- **json**: enable json format parsing
+
+## Output values
+Zebra will output a json string containing following informations:
+```json
+{
+  "number_of_lines": {
+    "service": "number_of_lines_for_this_service"
+  },
+  "service_performance": {
+    "service_name": {
+      "name": "service_name",
+      "number_of_lines": "number_of_lines_for_this_service",
+      "average_duration": "average_log_duration_for_this_service_is_ns",
+    }
+  },
+  "file_errors": "number_of_files_errors",
+  "parse_errors_count": "number_of_parse_errors_encountered",
+  "slowest_logs": [
+    {
+      "date": "log_date",
+      "level": "log_level",
+      "duration": "duration_in_ns",
+      "message": "log_message",
+      "service": "log_service"
+    }
+  ]
+}
+```
+An example for a scanning log output using `--top 1` could be
+```json
+{
+  "number_of_lines": {
+    "warning": 2
+  },
+  "service_performance": {
+    "database": {
+      "name": "database",
+      "number_of_lines": 2,
+      "average_duration": 6000000000
+    }
+  },
+  "file_errors": null,
+  "parse_errors_count": 0,
+  "slowest_logs": [
+    {
+      "date": "2026-01-01T00:00:00Z",
+      "level": "warning",
+      "duration": 11000000000,
+      "message": "hello from db",
+      "service": "database"
+    }
+  ]
+}
+```

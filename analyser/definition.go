@@ -12,7 +12,6 @@ type CollectionMetric struct {
 	FileErrors         []*parser.FileError      `json:"file_errors"`
 	ParsingErrorCount  int                      `json:"parse_errors_count"`
 	SlowestInput       []*parser.Log            `json:"slowest_logs"`
-	Query              string                   `json:"query"`
 }
 
 func newMetrics() *CollectionMetric {
