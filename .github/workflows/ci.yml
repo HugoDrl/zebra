@@ -18,3 +18,20 @@ jobs:
       - name: Run unit tests
         run: go test ./...
 
+  security_and_format_check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install gofumpt
+        uses: luisnquin/setup-gofumpt@v2
+
+      - name: Run code security analysis
+        uses: securego/gosec@master
+        with:
+          args: ./...
+
+      - name: Check if code is properly formatted
+        run: test -z "$(gofumpt -d .)"
