@@ -76,7 +76,7 @@ An example for a scanning log output using `--top 1` could be
     "database": {
       "name": "database",
       "number_of_lines": 2,
-      "average_duration": 6000000000
+      "average_duration": 50000000
     }
   },
   "file_errors": null,
@@ -85,7 +85,7 @@ An example for a scanning log output using `--top 1` could be
     {
       "date": "2026-01-01T00:00:00Z",
       "level": "warning",
-      "duration": 11000000000,
+      "duration": 50000000,
       "message": "hello from db",
       "service": "database"
     }
