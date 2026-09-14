@@ -41,6 +41,23 @@ When using Zebra, it is possible to add flags to modify behavior. Some flags are
 
 When started, Zebra starts to parse and store in RAM logs it found in designated files, and starts an HTTP server to serve metrics.  
 Currently available endpoints are:  
+
+- `/logs`  
+returns all buffered logs.  
+currently, no filter nor sorting parameters is possible. Logs will be returned using the following format:
+
+```json
+[
+    {
+      "date": "log_date",
+      "level": "log_level",
+      "duration": "duration_in_ns",
+      "message": "log_message",
+      "service": "log_service"
+    }
+]
+```
+
 - `/metrics`  
 serves basic logs metrics. Analyses all logs with no filter available, and outputs the following format:  
 
@@ -63,16 +80,4 @@ serves basic logs metrics. Analyses all logs with no filter available, and outpu
 
 - `/slowest_logs`  
 retrieves n slowest logs, given by integer query parameter `number_of_logs`  
-outputs the following format:  
-
-```json
-[
-    {
-      "date": "log_date",
-      "level": "log_level",
-      "duration": "duration_in_ns",
-      "message": "log_message",
-      "service": "log_service"
-    }
-]
-```
+each log retrieved here use the same format as `/logs` logs response
