@@ -2,6 +2,7 @@ package analyser
 
 import (
 	"errors"
+	"slices"
 	"sync"
 
 	"github.com/HugoDrl/zebra/internal/parser"
@@ -17,7 +18,6 @@ func AnalyseLogs(
 
 	for _, log := range logs {
 		metrics.handleService(log)
-		metrics.handleSlowestLogs(settings.SlowestLogsToRetrieve, log)
 	}
 
 	for _, err := range errs {
@@ -32,4 +32,15 @@ func AnalyseLogs(
 	wg.Wait()
 
 	return metrics
+}
+
+func RetrieveSlowestLogs(logs []*parser.Log, numberOfSlowestLogs int) []*parser.Log {
+	returningLogs := make([]*parser.Log, len(logs))
+	copy(returningLogs, logs)
+
+	slices.SortFunc(returningLogs, func(leftLog *parser.Log, rightLog *parser.Log) int {
+		return int(rightLog.Duration - leftLog.Duration)
+	})
+
+	return returningLogs[:min(numberOfSlowestLogs, len(returningLogs))]
 }

@@ -39,8 +39,13 @@ When using Zebra, it is possible to add flags to modify behavior. Some flags are
 - **top**: number of slowest logs to show
 - **json**: enable json format parsing
 
-## Output values
-Zebra will output a json string containing following informations:
+## Server
+
+When started, Zebra starts to parse and store in RAM logs it found in designated files, and starts an HTTP server to serve metrics.  
+Currently available endpoints are:  
+- `/metrics`  
+serves basic logs metrics. Analyses all logs with no filter available, and outputs the following format:  
+
 ```json
 {
   "number_of_lines": {
@@ -55,7 +60,15 @@ Zebra will output a json string containing following informations:
   },
   "file_errors": "number_of_files_errors",
   "parse_errors_count": "number_of_parse_errors_encountered",
-  "slowest_logs": [
+}
+```
+
+- `/slowest_logs`  
+retrieves n slowest logs, given by integer query parameter `number_of_logs`  
+outputs the following format:  
+
+```json
+[
     {
       "date": "log_date",
       "level": "log_level",
@@ -63,32 +76,5 @@ Zebra will output a json string containing following informations:
       "message": "log_message",
       "service": "log_service"
     }
-  ]
-}
-```
-An example for a scanning log output using `--top 1` could be
-```json
-{
-  "number_of_lines": {
-    "warning": 2
-  },
-  "service_performance": {
-    "database": {
-      "name": "database",
-      "number_of_lines": 2,
-      "average_duration": 50000000
-    }
-  },
-  "file_errors": null,
-  "parse_errors_count": 0,
-  "slowest_logs": [
-    {
-      "date": "2026-01-01T00:00:00Z",
-      "level": "warning",
-      "duration": 50000000,
-      "message": "hello from db",
-      "service": "database"
-    }
-  ]
-}
+]
 ```
