@@ -56,7 +56,7 @@ func processFiles(
 }
 
 func main() {
-	parsingSettings, filters, analyseSettings, err := flags.InitSettings()
+	parsingSettings, filters, err := flags.InitSettings()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -69,9 +69,8 @@ func main() {
 
 	if err := server.NewServer(
 		&server.DataLayer{
-			Logs:            logs,
-			Errs:            errs,
-			AnalyseSettings: analyseSettings,
+			Logs: logs,
+			Errs: errs,
 		},
 	).StartServer(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

@@ -4,14 +4,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/HugoDrl/zebra/internal/analyser"
 	"github.com/HugoDrl/zebra/internal/parser"
 )
 
 type DataLayer struct {
-	Logs            []*parser.Log
-	Errs            []error
-	AnalyseSettings *analyser.AnalyserSettings
+	Logs []*parser.Log
+	Errs []error
 }
 
 type HttpServer struct {
