@@ -9,7 +9,7 @@ import (
 )
 
 func (d *DataLayer) calculateMetrics(w http.ResponseWriter, r *http.Request) {
-	metrics := analyser.AnalyseLogs(d.Logs, d.Errs, d.AnalyseSettings)
+	metrics := analyser.AnalyseLogs(d.Logs, d.Errs)
 
 	payload, err := json.Marshal(metrics)
 	if err != nil {

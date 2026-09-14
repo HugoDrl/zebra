@@ -21,9 +21,8 @@ func feedThenCloseChan[T any](values ...T) chan T {
 
 func TestLogAnalyze(t *testing.T) {
 	type LogAnalyzeInput struct {
-		logChan  chan *parser.Log
-		errChan  chan error
-		settings *analyser.AnalyserSettings
+		logChan chan *parser.Log
+		errChan chan error
 	}
 
 	tests := map[string]struct {
@@ -82,8 +81,7 @@ func TestLogAnalyze(t *testing.T) {
 						Duration: parser.Duration(10 * time.Millisecond),
 					},
 				}...),
-				errChan:  feedThenCloseChan([]error{}...),
-				settings: &analyser.AnalyserSettings{},
+				errChan: feedThenCloseChan([]error{}...),
 			},
 			expected: &analyser.CollectionMetric{
 				Lines: map[parser.Level]int{
@@ -110,8 +108,7 @@ func TestLogAnalyze(t *testing.T) {
 						Duration: parser.Duration(10 * time.Millisecond),
 					},
 				}...),
-				errChan:  feedThenCloseChan([]error{}...),
-				settings: &analyser.AnalyserSettings{},
+				errChan: feedThenCloseChan([]error{}...),
 			},
 			expected: &analyser.CollectionMetric{
 				Lines: map[parser.Level]int{
@@ -131,7 +128,7 @@ func TestLogAnalyze(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			logs, errs := utils.ExtractLogAndErrChanToSlices(test.input.logChan, test.input.errChan)
-			output := analyser.AnalyseLogs(logs, errs, test.input.settings)
+			output := analyser.AnalyseLogs(logs, errs)
 			if diff := cmp.Diff(
 				test.expected,
 				output,

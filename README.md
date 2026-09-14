@@ -6,7 +6,6 @@ Zebra is a CLI tool that allows to read, parse and analyse log files to retrieve
 The behavior of the tool is the following  
 Zebra will read one or several log files, given by user. The tool will extract only supported format logs and aggregate them.  
 Zebra also shows number of errors encountered during parsing (non existing files, format errors, etc) but does not natively give details on those errors.  
-If the user is requesting slowest logs using --top flag, the tool will also give full log lines for slowest logs, depending on the number requested  
 
 ## Logs Values
 
@@ -36,7 +35,6 @@ When using Zebra, it is possible to add flags to modify behavior. Some flags are
 - **endDate**: log date to end to
 - **service**: filter logs by service
 - **level**: filter logs by level
-- **top**: number of slowest logs to show
 - **json**: enable json format parsing
 
 ## Server

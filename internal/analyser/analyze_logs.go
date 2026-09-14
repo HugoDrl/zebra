@@ -11,7 +11,6 @@ import (
 func AnalyseLogs(
 	logs []*parser.Log,
 	errs []error,
-	settings *AnalyserSettings,
 ) *CollectionMetric {
 	metrics := newMetrics()
 	var wg sync.WaitGroup

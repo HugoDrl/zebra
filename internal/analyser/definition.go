@@ -25,7 +25,3 @@ type ServiceMetric struct {
 	Lines           int           `json:"number_of_lines"`
 	AverageDuration time.Duration `json:"average_duration"`
 }
-
-type AnalyserSettings struct {
-	SlowestLogsToRetrieve int
-}
