@@ -11,7 +11,6 @@ type CollectionMetric struct {
 	ServicePerformance map[string]ServiceMetric `json:"service_performance"`
 	FileErrors         []*parser.FileError      `json:"file_errors"`
 	ParsingErrorCount  int                      `json:"parse_errors_count"`
-	SlowestInput       []*parser.Log            `json:"slowest_logs"`
 }
 
 func newMetrics() *CollectionMetric {

@@ -107,84 +107,79 @@ func TestHandleService(t *testing.T) {
 
 func TestSlowestLogsHandler(t *testing.T) {
 	type SlowestLogsInput struct {
-		logs            []parser.Log
-		slowestLogsSize int
+		logs              []*parser.Log
+		slowestLogsToRead int
 	}
 	tests := map[string]struct {
 		input    SlowestLogsInput
-		expected CollectionMetric
+		expected []*parser.Log
 	}{
-		"adding one log to metrics with size 1 should add it": {
+		"zero logs with zero slowest logs to read should return an empty array": {
 			input: SlowestLogsInput{
-				logs: []parser.Log{
+				logs:              []*parser.Log{},
+				slowestLogsToRead: 0,
+			},
+			expected: []*parser.Log{},
+		},
+		"zero logs with multiple slowest logs to read should return an empty array": {
+			input: SlowestLogsInput{
+				logs:              []*parser.Log{},
+				slowestLogsToRead: 12,
+			},
+			expected: []*parser.Log{},
+		},
+		"one log with one slowest log to read should return the only log": {
+			input: SlowestLogsInput{
+				logs: []*parser.Log{
 					{Duration: parser.Duration(12 * time.Millisecond)},
 				},
-				slowestLogsSize: 1,
+				slowestLogsToRead: 1,
 			},
-			expected: func() CollectionMetric {
-				metric := getDefaultMetric()
-				metric.SlowestInput = []*parser.Log{
-					{Duration: parser.Duration(12 * time.Millisecond)},
-				}
-				return metric
-			}(),
+			expected: []*parser.Log{
+				{Duration: parser.Duration(12 * time.Millisecond)},
+			},
 		},
-		"adding one entry to metrics with size 0 should not add it": {
+		"one log with zero slowest logs to read should return an empty array": {
 			input: SlowestLogsInput{
-				logs: []parser.Log{
+				logs: []*parser.Log{
 					{Duration: parser.Duration(12 * time.Millisecond)},
 				},
-				slowestLogsSize: 0,
+				slowestLogsToRead: 0,
 			},
-			expected: getDefaultMetric(),
+			expected: []*parser.Log{},
 		},
-		"adding more entries to metrics with size 1 should add the slowest": {
+		"three logs with one slowest log to read should add the slowest": {
 			input: SlowestLogsInput{
-				logs: []parser.Log{
+				logs: []*parser.Log{
 					{Duration: parser.Duration(20 * time.Millisecond)},
 					{Duration: parser.Duration(10 * time.Millisecond)},
 					{Duration: parser.Duration(12 * time.Millisecond)},
 				},
-				slowestLogsSize: 1,
+				slowestLogsToRead: 1,
 			},
-			expected: func() CollectionMetric {
-				metric := getDefaultMetric()
-				metric.SlowestInput = []*parser.Log{
-					{Duration: parser.Duration(20 * time.Millisecond)},
-				}
-				return metric
-			}(),
+			expected: []*parser.Log{
+				{Duration: parser.Duration(20 * time.Millisecond)},
+			},
 		},
-		"adding two entries to metrics with size 5 should add both": {
+		"two logs with five slowest logs to read should return both": {
 			input: SlowestLogsInput{
-				logs: []parser.Log{
+				logs: []*parser.Log{
 					{Duration: parser.Duration(12 * time.Millisecond)},
 					{Duration: parser.Duration(20 * time.Millisecond)},
 				},
-				slowestLogsSize: 5,
+				slowestLogsToRead: 5,
 			},
-			expected: func() CollectionMetric {
-				metric := getDefaultMetric()
-				metric.SlowestInput = []*parser.Log{
-					{Duration: parser.Duration(12 * time.Millisecond)},
-					{Duration: parser.Duration(20 * time.Millisecond)},
-				}
-				return metric
-			}(),
+			expected: []*parser.Log{
+				{Duration: parser.Duration(20 * time.Millisecond)},
+				{Duration: parser.Duration(12 * time.Millisecond)},
+			},
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			metric := getDefaultMetric()
-			for _, log := range test.input.logs {
-				metric.handleSlowestLogs(
-					test.input.slowestLogsSize,
-					&log,
-				)
-			}
-
-			if diff := cmp.Diff(test.expected, metric); diff != "" {
+			output := RetrieveSlowestLogs(test.input.logs, test.input.slowestLogsToRead)
+			if diff := cmp.Diff(test.expected, output); diff != "" {
 				t.Fatal(diff)
 			}
 		})

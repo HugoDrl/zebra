@@ -98,42 +98,6 @@ func TestLogAnalyze(t *testing.T) {
 				},
 			},
 		},
-		"adding a log with slowest logs gestion should increase metrics stats and slowest logs": {
-			input: LogAnalyzeInput{
-				logChan: feedThenCloseChan([]*parser.Log{
-					{
-						Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-						Service:  "database",
-						Level:    parser.Warning,
-						Duration: parser.Duration(10 * time.Millisecond),
-					},
-				}...),
-				errChan: feedThenCloseChan([]error{}...),
-				settings: &analyser.AnalyserSettings{
-					SlowestLogsToRetrieve: 1,
-				},
-			},
-			expected: &analyser.CollectionMetric{
-				Lines: map[parser.Level]int{
-					parser.Warning: 1,
-				},
-				ServicePerformance: map[string]analyser.ServiceMetric{
-					"database": {
-						Name:            "database",
-						Lines:           1,
-						AverageDuration: 10 * time.Millisecond,
-					},
-				},
-				SlowestInput: []*parser.Log{
-					{
-						Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-						Service:  "database",
-						Level:    parser.Warning,
-						Duration: parser.Duration(10 * time.Millisecond),
-					},
-				},
-			},
-		},
 		// TODO: make sure this behavior is ok ?
 		// Should this function handle validation for log ?
 		// Else, correct it
