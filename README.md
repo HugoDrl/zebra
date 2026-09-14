@@ -44,7 +44,7 @@ Currently available endpoints are:
 
 - `/logs`  
 returns all buffered logs.  
-currently, no filter nor sorting parameters is possible. Logs will be returned using the following format:
+currently, no filter nor sorting parameters are possible. Logs will be returned using the following format:
 
 ```json
 [
