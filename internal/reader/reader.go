@@ -2,19 +2,24 @@ package reader
 
 import (
 	"bufio"
+	"os"
 
 	"github.com/HugoDrl/zebra/internal/parser"
 )
 
-type ExtractLinesFromFileInput struct {
-	Reader        *bufio.Reader
+type ParseLinesInput struct {
 	ParseFunction parser.ParseFunction
 	LogsChan      chan<- *parser.Log
 	ErrsChan      chan<- error
 }
 
-func ExtractLinesFromReader(input ExtractLinesFromFileInput) {
-	scanner := bufio.NewScanner(input.Reader)
+type extractLinesFromReaderInput struct {
+	ParseLinesInput
+	reader *bufio.Reader
+}
+
+func extractLinesFromReader(input extractLinesFromReaderInput) {
+	scanner := bufio.NewScanner(input.reader)
 
 	lineNo := 0
 	for {
@@ -37,4 +42,28 @@ func ExtractLinesFromReader(input ExtractLinesFromFileInput) {
 			input.LogsChan <- &log
 		}
 	}
+}
+
+type ExtractLinesFromFileInput struct {
+	ParseLinesInput
+	root     *os.Root
+	Filename string
+}
+
+func ExtractLogsFromFileName(input ExtractLinesFromFileInput) {
+	file, err := input.root.Open(input.Filename)
+	if err != nil {
+		input.ErrsChan <- err
+		return
+	}
+
+	reader := bufio.NewReader(file)
+	extractLinesFromReader(extractLinesFromReaderInput{
+		reader: reader,
+		ParseLinesInput: ParseLinesInput{
+			ParseFunction: input.ParseLinesInput.ParseFunction,
+			LogsChan:      input.LogsChan,
+			ErrsChan:      input.ErrsChan,
+		},
+	})
 }
