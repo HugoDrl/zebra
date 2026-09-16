@@ -2,20 +2,17 @@ package reader
 
 import (
 	"bufio"
+	"io"
 	"os"
 
 	"github.com/HugoDrl/zebra/internal/parser"
 )
 
-type ParseLinesInput struct {
+type extractLinesFromReaderInput struct {
 	ParseFunction parser.ParseFunction
 	LogsChan      chan<- *parser.Log
 	ErrsChan      chan<- error
-}
-
-type extractLinesFromReaderInput struct {
-	ParseLinesInput
-	reader *bufio.Reader
+	reader        io.Reader
 }
 
 func extractLinesFromReader(input extractLinesFromReaderInput) {
@@ -45,25 +42,31 @@ func extractLinesFromReader(input extractLinesFromReaderInput) {
 }
 
 type ExtractLinesFromFileInput struct {
-	ParseLinesInput
-	root     *os.Root
-	Filename string
+	Root          *os.Root
+	Filename      string
+	ParseFunction parser.ParseFunction
 }
 
-func ExtractLogsFromFileName(input ExtractLinesFromFileInput) {
-	file, err := input.root.Open(input.Filename)
-	if err != nil {
-		input.ErrsChan <- err
-		return
-	}
+func ExtractLogsFromFileName(input ExtractLinesFromFileInput) (<-chan *parser.Log, <-chan error) {
+	logsChan := make(chan *parser.Log)
+	errsChan := make(chan error)
 
-	reader := bufio.NewReader(file)
-	extractLinesFromReader(extractLinesFromReaderInput{
-		reader: reader,
-		ParseLinesInput: ParseLinesInput{
-			ParseFunction: input.ParseLinesInput.ParseFunction,
-			LogsChan:      input.LogsChan,
-			ErrsChan:      input.ErrsChan,
-		},
-	})
+	go func() {
+		defer close(logsChan)
+		defer close(errsChan)
+
+		file, err := input.Root.Open(input.Filename)
+		if err != nil {
+			errsChan <- err
+			return
+		}
+
+		extractLinesFromReader(extractLinesFromReaderInput{
+			reader:        bufio.NewReader(file),
+			ParseFunction: input.ParseFunction,
+			LogsChan:      logsChan,
+			ErrsChan:      errsChan,
+		})
+	}()
+	return logsChan, errsChan
 }
