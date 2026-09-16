@@ -1,10 +1,10 @@
 # Zebra
 <img src="./logo/zebra.svg" alt="zebra-logo" width="300px"/>
-Zebra is a CLI tool that allows to read, parse and analyse log files to retrieve metrics.
+Zebra is an HTTP tool that allows to read, parse and analyse log files to retrieve metrics.
 
 ## Behavior
 The behavior of the tool is the following  
-Zebra will read one or several log files, given by user. The tool will extract only supported format logs and aggregate them.  
+Zebra will read one or several log files, given by requests. The tool will extract only supported format logs and aggregate them.  
 Zebra also shows number of errors encountered during parsing (non existing files, format errors, etc) but does not natively give details on those errors.  
 
 ## Logs Values
@@ -26,21 +26,15 @@ DATE LEVEL service=SERVICE message=MESSAGE duration=DURATION other=[EXTRAS]
 {"date": "DATE", "level": "LEVEL", "message": "MESSAGE", "duration": "DURATION", ["other": "EXTRAS"]}
 ```
 
-## Flags
-When using Zebra, it is possible to add flags to modify behavior. Some flags are necessary, some are optionals.
-### Necessary flags
-- **files**: log files to analyse
-### Optional flags
-- **startDate**: log date to start from
-- **endDate**: log date to end to
-- **service**: filter logs by service
-- **level**: filter logs by level
-- **json**: enable json format parsing
-
 ## Server
 
-When started, Zebra starts to parse and store in RAM logs it found in designated files, and starts an HTTP server to serve metrics.  
+When started, Zebra starts an HTTP server, waiting for requests
 Currently available endpoints are:  
+
+- `/parse`  
+starts to parse designated file, using `file` query parameter.  
+this endpoint will not return anything other than HTTP code indicating success or failure, but will start parsing job.  
+currently, parsed logs are stored in RAM, and can be retrieved using below endpoints.
 
 - `/logs`  
 returns all buffered logs.  
