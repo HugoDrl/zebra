@@ -12,39 +12,19 @@ func TestGetParseFunction(t *testing.T) {
 		input    parser.ParseSettings
 		expected parser.ParseFunction
 	}{
-		"default input should return default parsing function": {
+		"default input should return default parse function": {
 			input:    parser.ParseSettings{},
 			expected: parser.ParseDefaultFormatLine,
 		},
-		"json files with no specification on parsing should return default function": {
-			input: parser.ParseSettings{
-				Files: []string{"test.json", "parse.json"},
-			},
-			expected: parser.ParseDefaultFormatLine,
-		},
-		"explicit false on json field should return parsing function": {
+		"explicit false json setting should return default parse function": {
 			input: parser.ParseSettings{
 				Json: false,
-			},
-			expected: parser.ParseDefaultFormatLine,
-		},
-		"json false with json files should return parsing function": {
-			input: parser.ParseSettings{
-				Json:  false,
-				Files: []string{"test.json", "parse.json"},
 			},
 			expected: parser.ParseDefaultFormatLine,
 		},
 		"explicit true on json field should return json function": {
 			input: parser.ParseSettings{
 				Json: true,
-			},
-			expected: parser.ParseJSONFormatLine,
-		},
-		"json true with .log files should return json function": {
-			input: parser.ParseSettings{
-				Json:  true,
-				Files: []string{"test.log", "parse.log"},
 			},
 			expected: parser.ParseJSONFormatLine,
 		},

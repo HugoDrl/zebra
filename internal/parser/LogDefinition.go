@@ -56,6 +56,5 @@ type Log struct {
 }
 
 type ParseSettings struct {
-	Files []string
-	Json  bool
+	Json bool
 }
