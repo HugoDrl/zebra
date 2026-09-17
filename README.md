@@ -32,7 +32,8 @@ When started, Zebra starts an HTTP server, waiting for requests
 Currently available endpoints are:  
 
 - `/parse`  
-starts to parse designated file, using `file` query parameter.  
+starts to parse designated file, using `file` query parameter.   
+`json` query parameter is used to enable log parsing. truthy values are **true** and **1**. no value or falsy value will result in default format parsing.  
 this endpoint will not return anything other than HTTP code indicating success or failure, but will start parsing job.  
 currently, parsed logs are stored in RAM, and can be retrieved using below endpoints.
 
