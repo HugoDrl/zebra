@@ -7,8 +7,8 @@ import (
 	"github.com/HugoDrl/zebra/internal/analyser"
 )
 
-func (d *DataLayer) calculateMetrics(w http.ResponseWriter, r *http.Request) {
-	metrics := analyser.AnalyseLogs(d.Logs, d.Errs)
+func (s *HttpServer) calculateMetrics(w http.ResponseWriter, r *http.Request) {
+	metrics := analyser.AnalyseLogs(s.dataLayer.Logs, s.dataLayer.Errs)
 
 	payload, err := json.Marshal(metrics)
 	if err != nil {
@@ -20,6 +20,6 @@ func (d *DataLayer) calculateMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (d *DataLayer) AttachMetricsHandler(handler *http.ServeMux) {
-	handler.HandleFunc("GET /metrics", d.calculateMetrics)
+func (s *HttpServer) AttachMetricsHandler(handler *http.ServeMux) {
+	handler.HandleFunc("GET /metrics", s.calculateMetrics)
 }

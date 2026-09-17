@@ -1,36 +1,32 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
-	"os"
+	"strings"
 
-	"github.com/HugoDrl/zebra/internal/parser"
-	"github.com/HugoDrl/zebra/internal/reader"
+	"github.com/HugoDrl/zebra/internal/commands"
 )
 
-func (d *DataLayer) startFileParsing(w http.ResponseWriter, r *http.Request) {
+func (s *HttpServer) startFileParsing(w http.ResponseWriter, r *http.Request) {
 	filename := r.URL.Query().Get("file")
 	if filename == "" {
 		w.WriteHeader(400)
 		return
 	}
+	jsonQuery := strings.ToLower(r.URL.Query().Get("json"))
+	json := jsonQuery == "true" || jsonQuery == "1"
 
-	root, err := os.OpenRoot(".")
+	fmt.Println(filename, json, jsonQuery)
+	err := commands.StartFileParsing(s.dataLayer, filename, json)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	logsChan, errsChan := reader.ExtractLogsFromFileName(reader.ExtractLinesFromFileInput{
-		Root:          root,
-		Filename:      filename,
-		ParseFunction: parser.ParseJSONFormatLine,
-	})
 
-	go d.ingestLogChan(logsChan)
-	go d.ingestErrChan(errsChan)
 	w.WriteHeader(200)
 }
 
-func (d *DataLayer) AttachCommandsHandler(handler *http.ServeMux) {
-	handler.HandleFunc("GET /parse", d.startFileParsing)
+func (s *HttpServer) AttachCommandsHandler(handler *http.ServeMux) {
+	handler.HandleFunc("GET /parse", s.startFileParsing)
 }
