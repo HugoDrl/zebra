@@ -18,7 +18,7 @@ Zebra also shows number of errors encountered during parsing (non existing files
 
 ### Zebra format
 ```c
-DATE LEVEL service=SERVICE message=MESSAGE duration=DURATION other=[EXTRAS]
+DATE LEVEL service=SERVICE message=MESSAGE duration=DURATION [other=EXTRAS]
 ```
 
 ### JSON format
