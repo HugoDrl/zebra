@@ -42,7 +42,7 @@ returns parsed logs.
 several query parameters are available to filter logs:  
 `start-date` (inclusive) - expected RFC3339 format  
 `end-date` (inclusive) - expected RFC3339 format  
-`level` - allowed values are `FATAL - ERROR - WARNING - INFO - DEBUG` case insensitive
+`level` - allowed values are `FATAL - ERROR - WARNING - INFO - DEBUG` case insensitive  
 `service`  
 currently, no sorting parameters are possible. Logs will be returned using the following format:
 
