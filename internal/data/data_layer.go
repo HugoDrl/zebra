@@ -1,6 +1,8 @@
 package data
 
-import "github.com/HugoDrl/zebra/internal/parser"
+import (
+	"github.com/HugoDrl/zebra/internal/parser"
+)
 
 type DataLayer struct {
 	Logs []*parser.Log

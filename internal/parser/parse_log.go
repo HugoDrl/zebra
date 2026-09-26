@@ -49,7 +49,7 @@ func ParseJSONFormatLine(line string) (Log, error) {
 			Reason: err.Error(),
 		}
 	}
-	if level, ok := toLevel(string(log.Level)); !ok {
+	if level, ok := ParseLevel(string(log.Level)); !ok {
 		return Log{}, &ValueError{ErroredValue: "level"}
 	} else {
 		log.Level = level
@@ -76,7 +76,7 @@ func ParseDefaultFormatLine(line string) (Log, error) {
 	}
 
 	l := strings.TrimFunc(words[1], func(l rune) bool { return l == '[' || l == ']' })
-	level, ok := toLevel(strings.ToLower(l))
+	level, ok := ParseLevel(strings.ToLower(l))
 	if !ok {
 		return Log{}, &ValueError{
 			ErroredValue: "level",

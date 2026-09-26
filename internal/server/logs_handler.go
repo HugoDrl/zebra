@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/HugoDrl/zebra/internal/analyser"
+	"github.com/HugoDrl/zebra/internal/filter"
 )
 
 func (s *HttpServer) retrieveSlowestLogs(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +29,13 @@ func (s *HttpServer) retrieveSlowestLogs(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *HttpServer) retrieveLogs(w http.ResponseWriter, r *http.Request) {
-	payload, err := json.Marshal(s.dataLayer.Logs)
+	filters, err := filter.ProcessRequestToFilter(*r)
+	if err != nil {
+		w.WriteHeader(422)
+		return
+	}
+
+	payload, err := json.Marshal(filter.FilterLogs(s.dataLayer.Logs, filters))
 	if err != nil {
 		w.WriteHeader(500)
 		return
