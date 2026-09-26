@@ -10,35 +10,41 @@ import (
 
 type extractLinesFromReaderInput struct {
 	ParseFunction parser.ParseFunction
-	LogsChan      chan<- *parser.Log
-	ErrsChan      chan<- error
 	reader        io.Reader
 }
 
-func extractLinesFromReader(input extractLinesFromReaderInput) {
-	scanner := bufio.NewScanner(input.reader)
+func extractLinesFromReader(input extractLinesFromReaderInput) (<-chan *parser.Log, <-chan error) {
+	logsChan := make(chan *parser.Log)
+	errsChan := make(chan error)
+	go func() {
+		defer close(logsChan)
+		defer close(errsChan)
 
-	lineNo := 0
-	for {
-		if ok := scanner.Scan(); !ok {
-			if err := scanner.Err(); err != nil {
-				input.ErrsChan <- err
-			}
-			return
-		}
-		lineNo++
-		contentLine := scanner.Text()
+		scanner := bufio.NewScanner(input.reader)
 
-		log, err := input.ParseFunction(contentLine)
-		if err != nil {
-			input.ErrsChan <- &parser.ParseError{
-				Line: lineNo,
-				Err:  err,
+		lineNo := 0
+		for {
+			if ok := scanner.Scan(); !ok {
+				if err := scanner.Err(); err != nil {
+					errsChan <- err
+				}
+				return
 			}
-		} else {
-			input.LogsChan <- &log
+			lineNo++
+			contentLine := scanner.Text()
+
+			log, err := input.ParseFunction(contentLine)
+			if err != nil {
+				errsChan <- &parser.ParseError{
+					Line: lineNo,
+					Err:  err,
+				}
+			} else {
+				logsChan <- &log
+			}
 		}
-	}
+	}()
+	return logsChan, errsChan
 }
 
 type ExtractLinesFromFileInput struct {
@@ -48,25 +54,16 @@ type ExtractLinesFromFileInput struct {
 }
 
 func ExtractLogsFromFileName(input ExtractLinesFromFileInput) (<-chan *parser.Log, <-chan error) {
-	logsChan := make(chan *parser.Log)
-	errsChan := make(chan error)
+	file, err := input.Root.Open(input.Filename)
+	if err != nil {
+		echan := make(chan error, 1)
+		echan <- err
+		close(echan)
+		return nil, echan
+	}
 
-	go func() {
-		defer close(logsChan)
-		defer close(errsChan)
-
-		file, err := input.Root.Open(input.Filename)
-		if err != nil {
-			errsChan <- err
-			return
-		}
-
-		extractLinesFromReader(extractLinesFromReaderInput{
-			reader:        bufio.NewReader(file),
-			ParseFunction: input.ParseFunction,
-			LogsChan:      logsChan,
-			ErrsChan:      errsChan,
-		})
-	}()
-	return logsChan, errsChan
+	return extractLinesFromReader(extractLinesFromReaderInput{
+		reader:        bufio.NewReader(file),
+		ParseFunction: input.ParseFunction,
+	})
 }
