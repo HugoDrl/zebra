@@ -39,12 +39,12 @@ currently, parsed logs are stored in RAM, and can be retrieved using below endpo
 
 - `/logs`  
 returns parsed logs.  
-several query parameters are available to filter logs.  
-`start-date` (inclusive)  
-`end-date` (inclusive)  
-`level`  
+several query parameters are available to filter logs:  
+`start-date` (inclusive) - expected RFC3339 format  
+`end-date` (inclusive) - expected RFC3339 format  
+`level` - allowed values are `FATAL - ERROR - WARNING - INFO - DEBUG` case insensitive
 `service`  
-currently, no filter nor sorting parameters are possible. Logs will be returned using the following format:
+currently, no sorting parameters are possible. Logs will be returned using the following format:
 
 ```json
 [
