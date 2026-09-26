@@ -2,6 +2,15 @@
 <img src="./logo/zebra.svg" alt="zebra-logo" width="300px"/>
 Zebra is an HTTP tool that allows to read, parse and analyse log files to retrieve metrics.
 
+## Setup
+Once you've cloned this repo, to build the project you can use build.sh,
+and start it using dist/zebra executable
+
+```bash
+bash ./build.sh
+./dist/zebra
+```
+
 ## Behavior
 The behavior of the tool is the following  
 Zebra will read one or several log files, given by requests. The tool will extract only supported format logs and aggregate them.  
