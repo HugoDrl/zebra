@@ -59,7 +59,7 @@ func TestLevelParse(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			level, ok := toLevel(test.input)
+			level, ok := ParseLevel(test.input)
 
 			if ok != test.expectedOk {
 				t.Fatalf("%s: error in OK behavior: expected %t - got %t", name, test.expectedOk, ok)

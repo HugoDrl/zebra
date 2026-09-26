@@ -15,7 +15,7 @@ const (
 	Fatal   Level = "fatal"
 )
 
-func toLevel(input string) (Level, bool) {
+func ParseLevel(input string) (Level, bool) {
 	switch inputLevel := Level(strings.ToLower(input)); inputLevel {
 	case Debug:
 		return Debug, true

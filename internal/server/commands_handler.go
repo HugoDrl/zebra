@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -17,7 +16,6 @@ func (s *HttpServer) startFileParsing(w http.ResponseWriter, r *http.Request) {
 	jsonQuery := strings.ToLower(r.URL.Query().Get("json"))
 	json := jsonQuery == "true" || jsonQuery == "1"
 
-	fmt.Println(filename, json, jsonQuery)
 	err := commands.StartFileParsing(s.dataLayer, filename, json)
 	if err != nil {
 		w.WriteHeader(500)

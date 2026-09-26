@@ -83,7 +83,7 @@ func TestLogFilter(t *testing.T) {
 
 type testProcessFilterInput struct {
 	logs    []*parser.Log
-	filters *Filters
+	filters Filters
 }
 
 func TestProcessFilter(t *testing.T) {
@@ -94,7 +94,7 @@ func TestProcessFilter(t *testing.T) {
 		"no logs and no filters should return nothing": {
 			input: testProcessFilterInput{
 				logs:    []*parser.Log{},
-				filters: &Filters{},
+				filters: Filters{},
 			},
 			expected: []*parser.Log{},
 		},
@@ -107,7 +107,7 @@ func TestProcessFilter(t *testing.T) {
 						Duration: parser.Duration(20 * time.Millisecond),
 					},
 				},
-				filters: &Filters{},
+				filters: Filters{},
 			},
 			expected: []*parser.Log{
 				{
@@ -127,7 +127,7 @@ func TestProcessFilter(t *testing.T) {
 						Time: time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC),
 					},
 				},
-				filters: &Filters{
+				filters: Filters{
 					StartDate: time.Date(2026, 2, 2, 0, 0, 0, 0, time.UTC),
 				},
 			},
@@ -147,7 +147,7 @@ func TestProcessFilter(t *testing.T) {
 						Time: time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC),
 					},
 				},
-				filters: &Filters{
+				filters: Filters{
 					StartDate: time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
 			},
@@ -167,7 +167,7 @@ func TestProcessFilter(t *testing.T) {
 						Service: "ERROR",
 					},
 				},
-				filters: &Filters{
+				filters: Filters{
 					Service: "ERROR",
 				},
 			},
@@ -189,7 +189,7 @@ func TestProcessFilter(t *testing.T) {
 						Service: "ERROR",
 					},
 				},
-				filters: &Filters{
+				filters: Filters{
 					Service: "WARNING",
 					EndDate: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
@@ -200,18 +200,7 @@ func TestProcessFilter(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			inputChannel := make(chan *parser.Log, len(test.input.logs))
-			for _, log := range test.input.logs {
-				inputChannel <- log
-			}
-			close(inputChannel)
-
-			outputChan := ProcessFilter(inputChannel, test.input.filters)
-
-			outputLogs := make([]*parser.Log, 0)
-			for log := range outputChan {
-				outputLogs = append(outputLogs, log)
-			}
+			outputLogs := FilterLogs(test.input.logs, test.input.filters)
 
 			if diff := cmp.Diff(test.expected, outputLogs); diff != "" {
 				t.Fatal(diff)
