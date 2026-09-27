@@ -1,17 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/HugoDrl/zebra/internal/data"
 	"github.com/HugoDrl/zebra/internal/server"
 )
 
 func main() {
-	if err := server.NewServer(
+	ctx := make(chan os.Signal, 1)
+	signal.Notify(ctx, syscall.SIGINT, syscall.SIGTERM)
+	s := server.NewServer(
 		data.NewDataLayer(),
-	).StartServer(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	}
+	)
+	s.StartServer()
+
+	<-ctx
 }
