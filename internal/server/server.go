@@ -26,6 +26,6 @@ func NewServer(d *data.DataLayer) *HttpServer {
 	return s
 }
 
-func (s *HttpServer) StartServer() error {
-	return s.server.ListenAndServe()
+func (s *HttpServer) StartServer() {
+	go s.server.ListenAndServe()
 }
