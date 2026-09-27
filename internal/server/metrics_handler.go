@@ -5,10 +5,18 @@ import (
 	"net/http"
 
 	"github.com/HugoDrl/zebra/internal/analyser"
+	"github.com/HugoDrl/zebra/internal/filter"
 )
 
 func (s *HttpServer) calculateMetrics(w http.ResponseWriter, r *http.Request) {
-	metrics := analyser.AnalyseLogs(s.dataLayer.Logs, s.dataLayer.Errs)
+	filters, err := filter.ProcessRequestToFilter(*r)
+	if err != nil {
+		w.WriteHeader(422)
+		return
+	}
+
+	filteredLogs := filter.FilterLogs(s.dataLayer.Logs, filters)
+	metrics := analyser.AnalyseLogs(filteredLogs, s.dataLayer.Errs)
 
 	payload, err := json.Marshal(metrics)
 	if err != nil {
