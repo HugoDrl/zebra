@@ -68,7 +68,7 @@ currently, no sorting parameters are possible. Logs will be returned using the f
 ```
 
 - `/metrics`  
-serves basic logs metrics. Analyses all logs with no filter available, and outputs the following format:  
+serves basic logs metrics. Analyses logs outputs the following format:  
 
 ```json
 {
@@ -86,6 +86,7 @@ serves basic logs metrics. Analyses all logs with no filter available, and outpu
   "parse_errors_count": "number_of_parse_errors_encountered",
 }
 ```
+metrics can be filtered using the same filters than `/logs` does
 
 - `/slowest_logs`  
 retrieves n slowest logs, given by integer query parameter `number_of_logs`  
