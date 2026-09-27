@@ -15,6 +15,7 @@ func StartFileParsing(d *data.DataLayer, filename string, json bool) error {
 	}
 
 	logsChan, errsChan := reader.ExtractLogsFromFileName(reader.ExtractLinesFromFileInput{
+		Ctx:           d.Ctx,
 		Root:          root,
 		Filename:      filename,
 		ParseFunction: parser.GetParseFunction(parser.ParseSettings{Json: json}),
