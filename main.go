@@ -12,10 +12,14 @@ import (
 func main() {
 	ctx := make(chan os.Signal, 1)
 	signal.Notify(ctx, syscall.SIGINT, syscall.SIGTERM)
+
+	dataLayer, cancel := data.NewDataLayer()
+
 	s := server.NewServer(
-		data.NewDataLayer(),
+		dataLayer,
 	)
 	s.StartServer()
 
 	<-ctx
+	cancel()
 }

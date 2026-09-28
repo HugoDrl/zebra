@@ -1,46 +1,59 @@
 package reader
 
 import (
-	"bufio"
+	"bytes"
+	"context"
+	"errors"
 	"io"
 	"os"
 
 	"github.com/HugoDrl/zebra/internal/parser"
 )
 
-type extractLinesFromReaderInput struct {
-	ParseFunction parser.ParseFunction
-	reader        io.Reader
-}
-
-func extractLinesFromReader(input extractLinesFromReaderInput) (<-chan *parser.Log, <-chan error) {
+func extractLinesFromReader(ctx context.Context, reader io.Reader, parseFunction parser.ParseFunction) (<-chan *parser.Log, <-chan error) {
 	logsChan := make(chan *parser.Log)
 	errsChan := make(chan error)
 	go func() {
 		defer close(logsChan)
 		defer close(errsChan)
 
-		scanner := bufio.NewScanner(input.reader)
-
+		buffer := make([]byte, 1024)
+		startIdx := 0
 		lineNo := 0
 		for {
-			if ok := scanner.Scan(); !ok {
-				if err := scanner.Err(); err != nil {
-					errsChan <- err
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+			n, err := reader.Read(buffer[startIdx:])
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					continue
 				}
+				errsChan <- err
 				return
 			}
+			startIdx += n
 			lineNo++
-			contentLine := scanner.Text()
-
-			log, err := input.ParseFunction(contentLine)
-			if err != nil {
-				errsChan <- &parser.ParseError{
-					Line: lineNo,
-					Err:  err,
+			for {
+				idx := bytes.Index(buffer, []byte{'\n'})
+				if idx == -1 {
+					break
 				}
-			} else {
-				logsChan <- &log
+
+				log, err := parseFunction(string(buffer[:idx]))
+				buffer = buffer[idx+1:]
+				if err != nil {
+					errsChan <- &parser.ParseError{
+						Line: lineNo,
+						Err:  err,
+					}
+				} else {
+					logsChan <- &log
+					startIdx = 0
+				}
+
 			}
 		}
 	}()
@@ -48,6 +61,7 @@ func extractLinesFromReader(input extractLinesFromReaderInput) (<-chan *parser.L
 }
 
 type ExtractLinesFromFileInput struct {
+	Ctx           context.Context
 	Root          *os.Root
 	Filename      string
 	ParseFunction parser.ParseFunction
@@ -62,8 +76,5 @@ func ExtractLogsFromFileName(input ExtractLinesFromFileInput) (<-chan *parser.Lo
 		return nil, echan
 	}
 
-	return extractLinesFromReader(extractLinesFromReaderInput{
-		reader:        bufio.NewReader(file),
-		ParseFunction: input.ParseFunction,
-	})
+	return extractLinesFromReader(input.Ctx, file, input.ParseFunction)
 }
