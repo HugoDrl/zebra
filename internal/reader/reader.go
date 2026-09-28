@@ -1,8 +1,9 @@
 package reader
 
 import (
-	"bufio"
+	"bytes"
 	"context"
+	"errors"
 	"io"
 	"os"
 
@@ -16,8 +17,8 @@ func extractLinesFromReader(ctx context.Context, reader io.Reader, parseFunction
 		defer close(logsChan)
 		defer close(errsChan)
 
-		scanner := bufio.NewScanner(reader)
-
+		buffer := make([]byte, 1024)
+		startIdx := 0
 		lineNo := 0
 		for {
 			select {
@@ -25,24 +26,34 @@ func extractLinesFromReader(ctx context.Context, reader io.Reader, parseFunction
 				return
 			default:
 			}
-			if ok := scanner.Scan(); !ok {
-				if err := scanner.Err(); err != nil {
-					errsChan <- err
-					return
-				}
-				continue
-			}
-			lineNo++
-			contentLine := scanner.Text()
-
-			log, err := parseFunction(contentLine)
+			n, err := reader.Read(buffer[startIdx:])
 			if err != nil {
-				errsChan <- &parser.ParseError{
-					Line: lineNo,
-					Err:  err,
+				if errors.Is(err, io.EOF) {
+					continue
 				}
-			} else {
-				logsChan <- &log
+				errsChan <- err
+				return
+			}
+			startIdx += n
+			lineNo++
+			for {
+				idx := bytes.Index(buffer, []byte{'\n'})
+				if idx == -1 {
+					break
+				}
+
+				log, err := parseFunction(string(buffer[:idx]))
+				buffer = buffer[idx+1:]
+				if err != nil {
+					errsChan <- &parser.ParseError{
+						Line: lineNo,
+						Err:  err,
+					}
+				} else {
+					logsChan <- &log
+					startIdx = 0
+				}
+
 			}
 		}
 	}()

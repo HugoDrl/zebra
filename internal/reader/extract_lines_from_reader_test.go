@@ -46,7 +46,7 @@ func TestExtractLinesFromReader(t *testing.T) {
 			},
 		},
 		"reader with one line should return one log": {
-			inputReader:        strings.NewReader("test line"),
+			inputReader:        strings.NewReader("test line\n"),
 			inputParseFunction: func(s string) (parser.Log, error) { return parser.Log{}, nil },
 			expected: expectedOutput{
 				Logs: []*parser.Log{{}},
@@ -54,7 +54,7 @@ func TestExtractLinesFromReader(t *testing.T) {
 			},
 		},
 		"reader with two lines should return two logs": {
-			inputReader:        strings.NewReader("test line\ntest new line"),
+			inputReader:        strings.NewReader("test line\ntest new line\n"),
 			inputParseFunction: func(s string) (parser.Log, error) { return parser.Log{}, nil },
 			expected: expectedOutput{
 				Logs: []*parser.Log{{}, {}},
@@ -62,11 +62,27 @@ func TestExtractLinesFromReader(t *testing.T) {
 			},
 		},
 		"parse function that returns an error should feed the errChan with parseError": {
-			inputReader:        strings.NewReader("test line"),
+			inputReader:        strings.NewReader("test line\n"),
 			inputParseFunction: func(s string) (parser.Log, error) { return parser.Log{}, &parser.ValueError{} },
 			expected: expectedOutput{
 				Logs: []*parser.Log{},
 				Errs: []error{&parser.ParseError{Err: &parser.ValueError{}, Line: 1}},
+			},
+		},
+		"truncated last log should not be considered": {
+			inputReader:        strings.NewReader("test line\nhey i am"),
+			inputParseFunction: func(s string) (parser.Log, error) { return parser.Log{Message: s}, nil },
+			expected: expectedOutput{
+				Logs: []*parser.Log{{Message: "test line"}},
+				Errs: []error{},
+			},
+		},
+		"any log terminated with newline should be considered done": {
+			inputReader:        strings.NewReader("test line\nhey i am\n"),
+			inputParseFunction: func(s string) (parser.Log, error) { return parser.Log{Message: s}, nil },
+			expected: expectedOutput{
+				Logs: []*parser.Log{{Message: "test line"}, {Message: "hey i am"}},
+				Errs: []error{},
 			},
 		},
 	}

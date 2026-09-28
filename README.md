@@ -44,7 +44,8 @@ Currently available endpoints are:
 starts to parse designated file, using `file` query parameter.  
 `json` query parameter is used to enable log parsing. truthy values are **true** and **1**. no value or falsy value will result in default format parsing.  
 this endpoint will not return anything other than HTTP code indicating success or failure, but will start parsing job.  
-currently, parsed logs are stored in RAM, and can be retrieved using below endpoints.
+currently, parsed logs are stored in RAM, and can be retrieved using below endpoints.  
+all files parsed with zebra are maintained open in reading by the application, and is fetched at dynamically by the software. To make sure a log is completed before parsing, zebra will always wait for a \\n at the end of the log.
 
 - `/logs`  
 returns parsed logs.  
