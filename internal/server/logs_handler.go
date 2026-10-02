@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -15,7 +16,14 @@ func (s *HttpServer) retrieveSlowestLogs(w http.ResponseWriter, r *http.Request)
 		w.WriteHeader(422)
 		return
 	}
-	slowestLogs := analyser.RetrieveSlowestLogs(s.dataLayer.Logs, numberOfSlowestLogs)
+
+	logs, _, err := s.LogStore.RetrieveLogs(filter.Filters{})
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+	slowestLogs := analyser.RetrieveSlowestLogs(logs, numberOfSlowestLogs)
 	payload, err := json.Marshal(slowestLogs)
 	if err != nil {
 		w.WriteHeader(500)
@@ -35,7 +43,13 @@ func (s *HttpServer) retrieveLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payload, err := json.Marshal(filter.FilterLogs(s.dataLayer.Logs, filters))
+	logs, _, err := s.LogStore.RetrieveLogs(filters)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+	payload, err := json.Marshal(logs)
 	if err != nil {
 		w.WriteHeader(500)
 		return

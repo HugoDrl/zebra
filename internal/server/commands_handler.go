@@ -16,7 +16,7 @@ func (s *HttpServer) startFileParsing(w http.ResponseWriter, r *http.Request) {
 	jsonQuery := strings.ToLower(r.URL.Query().Get("json"))
 	json := jsonQuery == "true" || jsonQuery == "1"
 
-	err := commands.StartFileParsing(s.dataLayer, filename, json)
+	err := commands.StartFileParsing(s.ctx, s.LogStore, filename, json)
 	if err != nil {
 		w.WriteHeader(500)
 		return

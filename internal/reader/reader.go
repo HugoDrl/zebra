@@ -51,9 +51,8 @@ func extractLinesFromReader(ctx context.Context, reader io.Reader, parseFunction
 					}
 				} else {
 					logsChan <- &log
-					startIdx = 0
 				}
-
+				startIdx = 0
 			}
 		}
 	}()

@@ -1,28 +1,39 @@
 package commands
 
 import (
+	"context"
+	"log"
 	"os"
 
-	"github.com/HugoDrl/zebra/internal/data"
 	"github.com/HugoDrl/zebra/internal/parser"
 	"github.com/HugoDrl/zebra/internal/reader"
+	"github.com/HugoDrl/zebra/internal/store"
 )
 
-func StartFileParsing(d *data.DataLayer, filename string, json bool) error {
+func StartFileParsing(ctx context.Context, d store.LogsStore, filename string, json bool) error {
 	root, err := os.OpenRoot(".")
 	if err != nil {
-		return err
+		return nil
 	}
 
+	filectx, cancel := context.WithCancel(ctx)
 	logsChan, errsChan := reader.ExtractLogsFromFileName(reader.ExtractLinesFromFileInput{
-		Ctx:           d.Ctx,
+		Ctx:           filectx,
 		Root:          root,
 		Filename:      filename,
 		ParseFunction: parser.GetParseFunction(parser.ParseSettings{Json: json}),
 	})
 
-	go d.IngestLogChan(logsChan)
-	go d.IngestErrChan(errsChan)
+	go func() {
+		if _, err := d.InsertLogs(logsChan, errsChan); err != nil {
+			cancel()
+		}
+	}()
+	go func() {
+		for err := range errsChan {
+			log.Println(err)
+		}
+	}()
 
 	return nil
 }
