@@ -150,20 +150,26 @@ func (s *SQLiteStore) InsertLogs(ctx context.Context, logChan <-chan *parser.Log
 			return nil, err
 		}
 
-		sqlStr := "INSERT INTO logs (time, level, message, service, extras) VALUES "
+		var sqlStrBuilder strings.Builder
+		sqlStrBuilder.WriteString("INSERT INTO logs (time, level, message, service, extras) VALUES ")
 		args := make([]any, 0, len(logs)*5)
 		for i, log := range logs {
 			if i > 0 {
-				sqlStr += ","
+				sqlStrBuilder.WriteString(",")
 			}
-			sqlStr += "(?, ?, ?, ?, ?)"
+			sqlStrBuilder.WriteString("(?, ?, ?, ?, ?)")
 			args = append(args, []any{log.Time, log.Level, log.Message, log.Service, fmt.Sprintf("%v", log.Extra)}...)
 		}
 
-		if _, err := conn.ExecContext(ctx, sqlStr, args...); err != nil {
+		// TODO: for ExecContext and Commit, maybe think about some retry politics or something
+		if _, err := conn.ExecContext(ctx, sqlStrBuilder.String(), args...); err != nil {
 			return nil, err
 		}
-		conn.Commit()
+
+		if err := conn.Commit(); err != nil {
+			return nil, err
+		}
+
 		shouldInsert = false
 		if shouldEnd {
 			return logs, nil
