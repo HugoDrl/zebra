@@ -77,6 +77,21 @@ func prepareReadLogsSQLQuery(filters filter.Filters) (string, []any) {
 	return sqlStr, params
 }
 
+func prepareInsertLogsSQLQuery(logs []*parser.Log) (string, []any) {
+	var sqlStrBuilder strings.Builder
+	sqlStrBuilder.WriteString("INSERT INTO logs (time, level, message, service, extras) VALUES ")
+	args := make([]any, 0, len(logs)*5)
+	for i, log := range logs {
+		if i > 0 {
+			sqlStrBuilder.WriteString(",")
+		}
+		sqlStrBuilder.WriteString("(?, ?, ?, ?, ?)")
+		args = append(args, []any{log.Time, log.Level, log.Message, log.Service, fmt.Sprintf("%v", log.Extra)}...)
+	}
+
+	return sqlStrBuilder.String(), args
+}
+
 func (s *SQLiteStore) RetrieveLogs(ctx context.Context, filters filter.Filters) ([]*parser.Log, []error, error) {
 	conn, err := s.db.Begin()
 	if err != nil {
@@ -119,6 +134,8 @@ func (s *SQLiteStore) RetrieveLogs(ctx context.Context, filters filter.Filters) 
 	return logs, nil, nil
 }
 
+// FIXME:  I think this function should get the interface []*parser.Log instead of the channel
+// All channel to slice with batch gestion should be in a dedicated function, and this one should only handle session with database life
 func (s *SQLiteStore) InsertLogs(ctx context.Context, logChan <-chan *parser.Log, _ <-chan error) ([]*parser.Log, error) {
 	logs := make([]*parser.Log, 0, 100)
 	shouldInsert := false
@@ -151,19 +168,9 @@ func (s *SQLiteStore) InsertLogs(ctx context.Context, logChan <-chan *parser.Log
 			return nil, err
 		}
 
-		var sqlStrBuilder strings.Builder
-		sqlStrBuilder.WriteString("INSERT INTO logs (time, level, message, service, extras) VALUES ")
-		args := make([]any, 0, len(logs)*5)
-		for i, log := range logs {
-			if i > 0 {
-				sqlStrBuilder.WriteString(",")
-			}
-			sqlStrBuilder.WriteString("(?, ?, ?, ?, ?)")
-			args = append(args, []any{log.Time, log.Level, log.Message, log.Service, fmt.Sprintf("%v", log.Extra)}...)
-		}
-
+		query, args := prepareInsertLogsSQLQuery(logs)
 		// TODO: for ExecContext and Commit, maybe think about some retry politics or something
-		if _, err := conn.ExecContext(ctx, sqlStrBuilder.String(), args...); err != nil {
+		if _, err := conn.ExecContext(ctx, query, args...); err != nil {
 			return nil, err
 		}
 
