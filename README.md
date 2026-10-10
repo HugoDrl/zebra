@@ -96,7 +96,7 @@ each log retrieved here use the same format as `/logs` logs response
 
 ## STORAGE
 
-Parsed logs storage is solved by using a database file hanging where the application is started, read using [**SQLite**](https://github.com/sqlite/sqlitte).
+Parsed logs storage is solved by using a database file hanging where the application is started, read using [**SQLite**](https://github.com/sqlite/sqlite).
 This solution allows to keep zebra standalone from running services and allows to store logs to be persisted between starts.
 
 No strategy is currently considered to either delete or modify logs. Documents are *append-only* for now
