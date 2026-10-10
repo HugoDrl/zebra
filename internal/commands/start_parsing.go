@@ -25,7 +25,7 @@ func StartFileParsing(ctx context.Context, d store.LogsStore, filename string, j
 	})
 
 	go func() {
-		if _, err := d.InsertLogs(logsChan, errsChan); err != nil {
+		if _, err := d.InsertLogs(ctx, logsChan, errsChan); err != nil {
 			cancel()
 		}
 	}()

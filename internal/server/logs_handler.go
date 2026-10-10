@@ -17,7 +17,7 @@ func (s *HttpServer) retrieveSlowestLogs(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	logs, _, err := s.LogStore.RetrieveLogs(filter.Filters{})
+	logs, _, err := s.LogStore.RetrieveLogs(r.Context(), filter.Filters{})
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
@@ -43,7 +43,7 @@ func (s *HttpServer) retrieveLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logs, _, err := s.LogStore.RetrieveLogs(filters)
+	logs, _, err := s.LogStore.RetrieveLogs(r.Context(), filters)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)

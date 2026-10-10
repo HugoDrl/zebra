@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"os"
@@ -80,6 +81,7 @@ func TestSQLiteStore(t *testing.T) {
 				t.Fatal(err)
 				return
 			}
+			ctx := context.Background()
 
 			// send all logs to a channel
 			logChan := make(chan *parser.Log)
@@ -93,7 +95,7 @@ func TestSQLiteStore(t *testing.T) {
 
 			// use that channel to send
 			go func() {
-				_, err := store.InsertLogs(logChan, nil)
+				_, err := store.InsertLogs(ctx, logChan, nil)
 				done <- err
 				close(done)
 			}()
@@ -102,7 +104,7 @@ func TestSQLiteStore(t *testing.T) {
 				t.Fatal(err)
 			}
 			// retrieve logs just inserted with filters
-			logs, _, err := store.RetrieveLogs(test.inputFilters)
+			logs, _, err := store.RetrieveLogs(ctx, test.inputFilters)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -76,19 +77,19 @@ func prepareReadLogsSQLQuery(filters filter.Filters) (string, []any) {
 	return sqlStr, params
 }
 
-func (s *SQLiteStore) RetrieveLogs(filters filter.Filters) ([]*parser.Log, []error, error) {
+func (s *SQLiteStore) RetrieveLogs(ctx context.Context, filters filter.Filters) ([]*parser.Log, []error, error) {
 	conn, err := s.db.Begin()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	query, args := prepareReadLogsSQLQuery(filters)
-	stmt, err := conn.Prepare(query)
+	stmt, err := conn.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	rows, err := stmt.Query(args...)
+	rows, err := stmt.QueryContext(ctx, args...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -118,12 +119,14 @@ func (s *SQLiteStore) RetrieveLogs(filters filter.Filters) ([]*parser.Log, []err
 	return logs, nil, nil
 }
 
-func (s *SQLiteStore) InsertLogs(logChan <-chan *parser.Log, _ <-chan error) ([]*parser.Log, error) {
-	logs := make([]*parser.Log, 0, 10)
+func (s *SQLiteStore) InsertLogs(ctx context.Context, logChan <-chan *parser.Log, _ <-chan error) ([]*parser.Log, error) {
+	logs := make([]*parser.Log, 0, 100)
 	shouldInsert := false
 	shouldEnd := false
 	for {
 		select {
+		case <-ctx.Done():
+			shouldEnd = true
 		case log, ok := <-logChan:
 			if ok {
 				logs = append(logs, log)
@@ -157,7 +160,7 @@ func (s *SQLiteStore) InsertLogs(logChan <-chan *parser.Log, _ <-chan error) ([]
 			args = append(args, []any{log.Time, log.Level, log.Message, log.Service, fmt.Sprintf("%v", log.Extra)}...)
 		}
 
-		if _, err := conn.Exec(sqlStr, args...); err != nil {
+		if _, err := conn.ExecContext(ctx, sqlStr, args...); err != nil {
 			return nil, err
 		}
 		conn.Commit()

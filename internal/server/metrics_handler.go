@@ -16,7 +16,7 @@ func (s *HttpServer) calculateMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logs, errs, err := s.LogStore.RetrieveLogs(filters)
+	logs, errs, err := s.LogStore.RetrieveLogs(r.Context(), filters)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)

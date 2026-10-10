@@ -93,3 +93,17 @@ metrics can be filtered using the same filters than `/logs` does
 - `/slowest_logs`  
 retrieves n slowest logs, given by integer query parameter `number_of_logs`  
 each log retrieved here use the same format as `/logs` logs response
+
+## STORAGE
+
+For now, storage is solved by using a *SQLite* database hanging where the application is started.  
+This simple solution allows no other service to start and allows to store logs information on ROM to be persisted between starts.
+
+No strategy is currently considered to either delete or modify logs. Documents are *append-only* for now
+
+### INSERTING STRATEGY
+
+Inserting strategy is for now to insert *100 logs at a time*, or insert what remains if the injection is stopped.  
+If no new log is seen in *500 milliseconds*, currently waiting logs will also be inserted in the database.  
+Because of this, the maximum amount of time waiting for logs to be inserted in the database is around *50 seconds*.  
+
