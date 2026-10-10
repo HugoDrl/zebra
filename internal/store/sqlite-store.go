@@ -127,6 +127,7 @@ func (s *SQLiteStore) InsertLogs(ctx context.Context, logChan <-chan *parser.Log
 		select {
 		case <-ctx.Done():
 			shouldEnd = true
+			shouldInsert = len(logs) > 0
 		case log, ok := <-logChan:
 			if ok {
 				logs = append(logs, log)
