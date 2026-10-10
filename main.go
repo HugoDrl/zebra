@@ -1,25 +1,32 @@
 package main
 
 import (
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/HugoDrl/zebra/internal/data"
 	"github.com/HugoDrl/zebra/internal/server"
+	"github.com/HugoDrl/zebra/internal/store"
 )
 
 func main() {
 	ctx := make(chan os.Signal, 1)
 	signal.Notify(ctx, syscall.SIGINT, syscall.SIGTERM)
 
-	dataLayer, cancel := data.NewDataLayer()
+	store, err := store.NewSQLiteStore("./temp.db")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	s := server.NewServer(
-		dataLayer,
+		store,
 	)
 	s.StartServer()
 
+	log.Println("succesfully started server on port 8000")
+
 	<-ctx
-	cancel()
+	s.Cancel()
+	log.Println("server stopped")
 }
