@@ -13,7 +13,7 @@ import (
 func StartFileParsing(ctx context.Context, d store.LogsStore, filename string, json bool) error {
 	root, err := os.OpenRoot(".")
 	if err != nil {
-		return nil
+		return err
 	}
 
 	filectx, cancel := context.WithCancel(ctx)
