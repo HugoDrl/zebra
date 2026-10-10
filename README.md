@@ -1,3 +1,4 @@
+[![Continuous Integration](https://github.com/HugoDrl/zebra/actions/workflows/ci.yml/badge.svg)](https://github.com/HugoDrl/zebra/actions/workflows/ci.yml)
 # Zebra
 <img src="./logo/zebra.svg" alt="zebra-logo" width="300px"/>
 Zebra is an HTTP tool that allows to read, parse and analyse log files to retrieve metrics.
