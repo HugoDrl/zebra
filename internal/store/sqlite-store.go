@@ -86,7 +86,7 @@ func prepareInsertLogsSQLQuery(logs []*parser.Log) (string, []any) {
 			sqlStrBuilder.WriteString(",")
 		}
 		sqlStrBuilder.WriteString("(?, ?, ?, ?, ?)")
-		args = append(args, []any{log.Time, log.Level, log.Message, log.Service, fmt.Sprintf("%v", log.Extra)}...)
+		args = append(args, log.Time, log.Level, log.Message, log.Service, fmt.Sprintf("%v", log.Extra))
 	}
 
 	return sqlStrBuilder.String(), args
