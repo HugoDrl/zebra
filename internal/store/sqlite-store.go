@@ -178,6 +178,7 @@ func (s *SQLiteStore) InsertLogs(ctx context.Context, logChan <-chan *parser.Log
 			return nil, err
 		}
 
+		logs = []*parser.Log{}
 		shouldInsert = false
 		if shouldEnd {
 			return logs, nil
