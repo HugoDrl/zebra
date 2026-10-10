@@ -2,6 +2,8 @@ package store
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/HugoDrl/zebra/internal/filter"
@@ -25,10 +27,18 @@ func NewSQLiteStore(dbFile string) (*SQLiteStore, error) {
 	if _, err := db.Exec(`
 	CREATE TABLE IF NOT EXISTS logs (
 		id INTEGER,
-		name VARCHAR(255),
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		time DATETIME,
+		level VARCHAR(255),
+		message VARCHAR(255),
+		service VARCHAR(255),
+		extras JSONB,
 
 		PRIMARY KEY (id AUTOINCREMENT)
-	)
+	);
+
+	CREATE INDEX IF NOT EXISTS log_time
+	ON logs (time);
 	`); err != nil {
 		return nil, err
 	}
@@ -38,18 +48,47 @@ func NewSQLiteStore(dbFile string) (*SQLiteStore, error) {
 	}, nil
 }
 
+func prepareReadLogsSQLQuery(filters filter.Filters) (string, []any) {
+	wheres := make([]string, 0, 4)
+	params := make([]any, 0, 4)
+
+	if !filters.StartDate.IsZero() {
+		wheres = append(wheres, "time > ?")
+		params = append(params, filters.StartDate)
+	}
+	if !filters.EndDate.IsZero() {
+		wheres = append(wheres, "time < ?")
+		params = append(params, filters.EndDate)
+	}
+	if filters.Level != "" {
+		wheres = append(wheres, "level = ?")
+		params = append(params, filters.Level)
+	}
+	if filters.Service != "" {
+		wheres = append(wheres, "service = ?")
+		params = append(params, filters.Service)
+	}
+
+	sqlStr := "SELECT time, level, message, service, extras FROM logs"
+	if len(wheres) > 0 {
+		sqlStr += " WHERE " + strings.Join(wheres, " AND ")
+	}
+	return sqlStr, params
+}
+
 func (s *SQLiteStore) RetrieveLogs(filters filter.Filters) ([]*parser.Log, []error, error) {
 	conn, err := s.db.Begin()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	stmt, err := conn.Prepare(`SELECT name FROM logs`)
+	query, args := prepareReadLogsSQLQuery(filters)
+	stmt, err := conn.Prepare(query)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	rows, err := stmt.Query()
+	rows, err := stmt.Query(args...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -62,7 +101,9 @@ func (s *SQLiteStore) RetrieveLogs(filters filter.Filters) ([]*parser.Log, []err
 			break
 		}
 
-		if err := rows.Scan(&log.Service); err != nil {
+		var extras any
+		// TODO: actually return extras
+		if err := rows.Scan(&log.Time, &log.Level, &log.Message, &log.Service, &extras); err != nil {
 			return nil, nil, err
 		}
 		logs = append(logs, &log)
@@ -80,34 +121,49 @@ func (s *SQLiteStore) RetrieveLogs(filters filter.Filters) ([]*parser.Log, []err
 func (s *SQLiteStore) InsertLogs(logChan <-chan *parser.Log, _ <-chan error) ([]*parser.Log, error) {
 	logs := make([]*parser.Log, 0, 10)
 	shouldInsert := false
+	shouldEnd := false
 	for {
 		select {
 		case log, ok := <-logChan:
-			if !ok {
-				return logs, nil
-			}
-			logs = append(logs, log)
-			if len(logs) == cap(logs) {
-				shouldInsert = true
-			}
-		case <-time.After(500 * time.Millisecond):
-			if len(logs) > 0 {
-				shouldInsert = true
+			if ok {
+				logs = append(logs, log)
 			} else {
+				shouldEnd = true
 			}
+			shouldInsert = (len(logs) == cap(logs)) || (shouldEnd && len(logs) > 0)
+		case <-time.After(500 * time.Millisecond):
+			shouldInsert = len(logs) > 0
 		}
 
-		if shouldInsert {
-			conn, err := s.db.Begin()
-			if err != nil {
-				return nil, err
+		if !shouldInsert {
+			if shouldEnd {
+				return logs, nil
 			}
+			continue
+		}
 
-			if _, err := conn.Exec(`INSERT INTO logs (name) VALUES ($1)`, logs[0].Service); err != nil {
-				return nil, err
+		conn, err := s.db.Begin()
+		if err != nil {
+			return nil, err
+		}
+
+		sqlStr := "INSERT INTO logs (time, level, message, service, extras) VALUES "
+		args := make([]any, 0, len(logs)*5)
+		for i, log := range logs {
+			if i > 0 {
+				sqlStr += ","
 			}
-			conn.Commit()
-			shouldInsert = false
+			sqlStr += "(?, ?, ?, ?, ?)"
+			args = append(args, []any{log.Time, log.Level, log.Message, log.Service, fmt.Sprintf("%v", log.Extra)}...)
+		}
+
+		if _, err := conn.Exec(sqlStr, args...); err != nil {
+			return nil, err
+		}
+		conn.Commit()
+		shouldInsert = false
+		if shouldEnd {
+			return logs, nil
 		}
 	}
 }
