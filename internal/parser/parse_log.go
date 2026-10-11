@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -102,15 +101,10 @@ func ParseDefaultFormatLine(line string) (Log, error) {
 		case "service":
 			service = f[1]
 		case "duration":
-			if f[1][len(f[1])-2:] != "ms" {
-				return Log{}, &ValueError{ExpectedValue: "duration value in milliseconds on format xxxms", ErroredValue: f[1]}
-			}
-			value, err := strconv.Atoi(f[1][:len(f[1])-2])
+			duration, err = time.ParseDuration(f[1])
 			if err != nil {
-				return Log{}, &ValueError{ExpectedValue: "duration value in milliseconds on format xxxms", ErroredValue: f[1]}
+				return Log{}, &ValueError{ExpectedValue: "Expected a vald value for duration", ErroredValue: f[1], Err: err}
 			}
-
-			duration = time.Duration(value * int(time.Millisecond))
 		default:
 			fields[title] = f[1]
 		}
