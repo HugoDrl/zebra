@@ -1,48 +1,50 @@
-package parser
+package parser_test
 
 import (
 	"testing"
+
+	"github.com/HugoDrl/zebra/internal/parser"
 )
 
 func TestLevelParse(t *testing.T) {
 	tests := map[string]struct {
 		input      string
-		expected   Level
+		expected   parser.Level
 		expectedOk bool
 	}{
 		"WARNING level should exist": {
 			input:      "WARNING",
-			expected:   Warning,
+			expected:   parser.Warning,
 			expectedOk: true,
 		},
 		"warning level should exist": {
 			input:      "warning",
-			expected:   Warning,
+			expected:   parser.Warning,
 			expectedOk: true,
 		},
 		"waRNiNg level minimal should exist": {
 			input:      "waRNiNg",
-			expected:   Warning,
+			expected:   parser.Warning,
 			expectedOk: true,
 		},
 		"error level should exist": {
 			input:      "error",
-			expected:   Error,
+			expected:   parser.Error,
 			expectedOk: true,
 		},
 		"info level should exist": {
 			input:      "info",
-			expected:   Info,
+			expected:   parser.Info,
 			expectedOk: true,
 		},
 		"debug level should exist": {
 			input:      "DEBUG",
-			expected:   Debug,
+			expected:   parser.Debug,
 			expectedOk: true,
 		},
 		"fatal level should exist": {
 			input:      "Fatal",
-			expected:   Fatal,
+			expected:   parser.Fatal,
 			expectedOk: true,
 		},
 		"incorrect level should not exist": {
@@ -59,7 +61,7 @@ func TestLevelParse(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			level, ok := ParseLevel(test.input)
+			level, ok := parser.ParseLevel(test.input)
 
 			if ok != test.expectedOk {
 				t.Fatalf("%s: error in OK behavior: expected %t - got %t", name, test.expectedOk, ok)
