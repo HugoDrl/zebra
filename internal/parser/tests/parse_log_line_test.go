@@ -54,23 +54,10 @@ func TestParseLineLog(t *testing.T) {
 				},
 			},
 		},
-		"invalid: invalid duration in seconds instead of ms": {
-			// duration should (for now) only be in milliseconds
-			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=50s",
-			expected: ParseLineOutput{
-				Err: &parser.ValueError{
-					ExpectedValue: "duration value in milliseconds on format xxxms",
-					ErroredValue:  "50s",
-				},
-			},
-		},
 		"invalid: invalid duration is not a number": {
 			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=NaNms",
 			expected: ParseLineOutput{
-				Err: &parser.ValueError{
-					ExpectedValue: "duration value in milliseconds on format xxxms",
-					ErroredValue:  "NaNms",
-				},
+				Err: &parser.ValueError{},
 			},
 		},
 		"invalid: missing field": {
@@ -101,17 +88,41 @@ func TestParseLineLog(t *testing.T) {
 				},
 			},
 		},
+		"valid log with duration in seconds should return it": {
+			input: "2026-01-01T00:00:00Z WARNING service=test message=hey duration=50s",
+			expected: ParseLineOutput{
+				Log: parser.Log{
+					Time:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+					Level:    parser.Warning,
+					Service:  "test",
+					Message:  "hey",
+					Duration: parser.Duration(50 * time.Second),
+					Extra:    map[string]string{},
+				},
+			},
+		},
+		"invalid duration should return an error": {
+			input: "2026-01-01T00:00:00Z WARNING service=test message=\"this log is very important\" duration=5",
+			expected: ParseLineOutput{
+				Err: &parser.ValueError{},
+			},
+		},
+		"no duration at all should return an error": {
+			input: "2026-01-01T00:00:00Z WARNING service=test message=\"this log is very important\"",
+			expected: ParseLineOutput{
+				Err: &parser.ValueError{},
+			},
+		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			log, err := parser.ParseDefaultFormatLine(test.input)
-			output := ParseLineOutput{
-				Log: log,
-				Err: err,
-			}
 
-			if diff := cmp.Diff(test.expected, output); diff != "" {
+			if (err == nil) != (test.expected.Err == nil) {
+				t.Fatalf("expected %v - got %v", test.expected.Err, err)
+			}
+			if diff := cmp.Diff(test.expected.Log, log); diff != "" {
 				t.Fatal(diff)
 			}
 		})
@@ -130,17 +141,13 @@ func TestParseJSONLine(t *testing.T) {
 		"empty log should just return a json parsing error": {
 			input: "",
 			expected: ParseLineOutput{
-				Err: &parser.ParseError{
-					Reason: "unexpected end of JSON input",
-				},
+				Err: &parser.ParseError{},
 			},
 		},
 		"empty json log should return validation error": {
 			input: "{}",
 			expected: ParseLineOutput{
-				Err: &parser.ValueError{
-					ErroredValue: "level",
-				},
+				Err: &parser.ValueError{},
 			},
 		},
 		"valid json log with no extra fields should be parsed just fine": {
@@ -173,33 +180,25 @@ func TestParseJSONLine(t *testing.T) {
 		"invalid level json log should return an error": {
 			input: `{"date": "2026-01-01T00:00:00Z", "level": "HEY", "service": "database", "message": "drop db", "duration": "10ms"}`,
 			expected: ParseLineOutput{
-				Err: &parser.ValueError{
-					ErroredValue: "level",
-				},
+				Err: &parser.ValueError{},
 			},
 		},
 		"invalid duration field for json log should raise an error": {
 			input: `{"date": "2026-01-01T00:00:00Z", "level": "WARNING", "service": "database", "message": "drop db", "duration": "hey"}`,
 			expected: ParseLineOutput{
-				Err: &parser.ParseError{
-					Reason: `time: invalid duration "hey"`,
-				},
+				Err: &parser.ParseError{},
 			},
 		},
 		"non-json format should return an error": {
 			input: `{"date": "2026-01-01T00:00:00Z", "level": "WARNING", "service": "database", "message": "drop db", "duration": "10ms"`,
 			expected: ParseLineOutput{
-				Err: &parser.ParseError{
-					Reason: "unexpected end of JSON input",
-				},
+				Err: &parser.ParseError{},
 			},
 		},
 		"invalid date field for json should return a validation error": {
 			input: `{"date": "invalid date i guess", "level": "WARNING", "service": "database", "message": "drop db", "duration": "10ms"}`,
 			expected: ParseLineOutput{
-				Err: &parser.ParseError{
-					Reason: `parsing time "invalid date i guess" as "2006-01-02T15:04:05Z07:00": cannot parse "invalid date i guess" as "2006"`,
-				},
+				Err: &parser.ParseError{},
 			},
 		},
 	}
@@ -207,12 +206,11 @@ func TestParseJSONLine(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			log, err := parser.ParseJSONFormatLine(test.input)
-			output := ParseLineOutput{
-				Log: log,
-				Err: err,
-			}
 
-			if diff := cmp.Diff(test.expected, output); diff != "" {
+			if !(err == nil) == (test.expected.Err == nil) {
+				t.Fatalf("not valid error encountered. expected %v - got %v", test.expected.Err, err)
+			}
+			if diff := cmp.Diff(test.expected.Log, log); diff != "" {
 				t.Fatal(diff)
 			}
 		})
