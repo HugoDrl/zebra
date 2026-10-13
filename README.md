@@ -8,6 +8,7 @@ Once you've cloned this repo, to build the project you can use build.sh,
 and start it using dist/zebra executable
 
 ```bash
+git clone https://github.com/hugodrl/zebra.git
 bash ./build.sh
 ./dist/zebra
 ```
@@ -82,11 +83,11 @@ serves basic logs metrics. Analyses logs outputs the following format:
     "service_name": {
       "name": "service_name",
       "number_of_lines": "number_of_lines_for_this_service",
-      "average_duration": "average_log_duration_for_this_service_is_ns",
+      "average_duration": "average_log_duration_for_this_service_is_ns"
     }
   },
   "file_errors": "number_of_files_errors",
-  "parse_errors_count": "number_of_parse_errors_encountered",
+  "parse_errors_count": "number_of_parse_errors_encountered"
 }
 ```
 metrics can be filtered using the same filters than `/logs` does
