@@ -115,3 +115,31 @@ func TestSQLiteStore(t *testing.T) {
 		})
 	}
 }
+
+func TestWriteReadWrite(t *testing.T) {
+	s, err := store.NewSQLiteStore("i.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// first round of insert
+	firstRound := make(chan *parser.Log, 1)
+	firstRound <- &parser.Log{}
+	close(firstRound)
+	if _, err := s.InsertLogs(context.Background(), firstRound, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	// get logs
+	if _, _, err = s.RetrieveLogs(context.Background(), filter.Filters{}); err != nil {
+		t.Fatal(err)
+	}
+
+	// second round of insertion
+	secondRound := make(chan *parser.Log, 1)
+	secondRound <- &parser.Log{}
+	close(secondRound)
+	if _, err := s.InsertLogs(context.Background(), secondRound, nil); err != nil {
+		t.Fatal(err)
+	}
+}
