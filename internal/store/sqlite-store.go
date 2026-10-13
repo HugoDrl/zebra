@@ -94,6 +94,7 @@ func prepareInsertLogsSQLQuery(logs []*parser.Log) (string, []any) {
 
 func (s *SQLiteStore) RetrieveLogs(ctx context.Context, filters filter.Filters) ([]*parser.Log, []error, error) {
 	conn, err := s.db.Begin()
+	defer conn.Commit()
 	if err != nil {
 		return nil, nil, err
 	}
