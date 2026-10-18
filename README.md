@@ -105,7 +105,7 @@ No strategy is currently considered to either delete or modify logs. Documents a
 
 ### INSERT STRATEGY
 
-Insert strategy is to insert **100 logs at a time**, or insert what remains if the injection is stopped.  
+Insert strategy is to insert **1000 logs at a time**, or insert what remains if the injection is stopped.  
 If no new log is seen in **500 milliseconds**, currently waiting logs will also be inserted in the database.  
 Because of this, the maximum amount of time waiting for logs to be inserted in the database is around **50 seconds**.  
 Lastly, pending logs will be inserted in database before zebra stops to avoid losing data.  
