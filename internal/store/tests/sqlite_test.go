@@ -118,6 +118,7 @@ func TestSQLiteStore(t *testing.T) {
 
 func TestWriteReadWrite(t *testing.T) {
 	s, err := store.NewSQLiteStore("i.sql")
+	defer os.Remove("i.sql")
 	if err != nil {
 		t.Fatal(err)
 	}
