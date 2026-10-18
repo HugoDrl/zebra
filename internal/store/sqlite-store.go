@@ -138,7 +138,7 @@ func (s *SQLiteStore) RetrieveLogs(ctx context.Context, filters filter.Filters) 
 // FIXME:  I think this function should get the interface []*parser.Log instead of the channel
 // All channel to slice with batch gestion should be in a dedicated function, and this one should only handle session with database life
 func (s *SQLiteStore) InsertLogs(ctx context.Context, logChan <-chan *parser.Log, _ <-chan error) ([]*parser.Log, error) {
-	logs := make([]*parser.Log, 0, 100)
+	logs := make([]*parser.Log, 0, 1000)
 	shouldInsert := false
 	shouldEnd := false
 	for {
@@ -179,7 +179,7 @@ func (s *SQLiteStore) InsertLogs(ctx context.Context, logChan <-chan *parser.Log
 			return nil, err
 		}
 
-		logs = []*parser.Log{}
+		logs = logs[:0]
 		shouldInsert = false
 		if shouldEnd {
 			return logs, nil
