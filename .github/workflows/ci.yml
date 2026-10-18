@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Run unit tests
-        run: go test ./...
+        run: go test -race ./...
 
   security_and_format_check:
     runs-on: ubuntu-latest
