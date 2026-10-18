@@ -12,8 +12,28 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+type partialReader struct {
+	Content      string
+	BytesPerRead int
+	currIndex    int
+}
+
+func (r *partialReader) Read(p []byte) (int, error) {
+	if r.currIndex >= len(r.Content) {
+		return 0, io.EOF
+	}
+
+	leaveToRead := len(r.Content) - r.currIndex
+	willRead := min(r.BytesPerRead, leaveToRead)
+
+	copy(p[:willRead], []byte(r.Content[r.currIndex:r.currIndex+willRead]))
+	r.currIndex += willRead
+
+	return willRead, nil
+}
+
 type cancellableReader struct {
-	reader strings.Reader
+	reader io.Reader
 	ctx    context.Context
 	cancel func()
 }
@@ -33,7 +53,7 @@ type expectedOutput struct {
 
 func TestExtractLinesFromReader(t *testing.T) {
 	tests := map[string]struct {
-		inputReader        *strings.Reader
+		inputReader        io.Reader
 		inputParseFunction parser.ParseFunction
 		expected           expectedOutput
 	}{
@@ -85,13 +105,24 @@ func TestExtractLinesFromReader(t *testing.T) {
 				Errs: []error{},
 			},
 		},
+		"partial read of a log should be just fine": {
+			inputReader: &partialReader{
+				Content:      "test line\nhey i am\n",
+				BytesPerRead: 3,
+			},
+			inputParseFunction: func(s string) (parser.Log, error) { return parser.Log{Message: s}, nil },
+			expected: expectedOutput{
+				Logs: []*parser.Log{{Message: "test line"}, {Message: "hey i am"}},
+				Errs: []error{},
+			},
+		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			creader := cancellableReader{
-				reader: *test.inputReader,
+				reader: test.inputReader,
 				ctx:    ctx,
 				cancel: cancel,
 			}

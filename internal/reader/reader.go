@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"time"
 
 	"github.com/HugoDrl/zebra/internal/parser"
 )
@@ -20,20 +21,30 @@ func extractLinesFromReader(ctx context.Context, reader io.Reader, parseFunction
 		buffer := make([]byte, 1024)
 		startIdx := 0
 		lineNo := 0
+		delay := 0 * time.Second
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			default:
+			case <-time.After(delay):
 			}
 			n, err := reader.Read(buffer[startIdx:])
 			if err != nil {
 				if errors.Is(err, io.EOF) {
+					// exponential increase of delay to avoid charging CPU on read file
+					if delay.Seconds() <= 15 {
+						delay *= 2
+					}
+					if delay.Seconds() == 0 {
+						delay = 1 * time.Second
+					}
 					continue
 				}
 				errsChan <- err
 				return
 			}
+			// reset of the delay when some new lines are found
+			delay = 0 * time.Second
 			startIdx += n
 			lineNo++
 			for {
@@ -43,7 +54,9 @@ func extractLinesFromReader(ctx context.Context, reader io.Reader, parseFunction
 				}
 
 				log, err := parseFunction(string(buffer[:idx]))
-				buffer = buffer[idx+1:]
+				newBuffer := make([]byte, len(buffer))
+				copy(newBuffer, buffer[idx+1:])
+				buffer = newBuffer
 				if err != nil {
 					errsChan <- &parser.ParseError{
 						Line: lineNo,
@@ -52,7 +65,10 @@ func extractLinesFromReader(ctx context.Context, reader io.Reader, parseFunction
 				} else {
 					logsChan <- &log
 				}
-				startIdx = 0
+				// here, no verification is made on startIdx because we know buffer will never be full,
+				// so we will always find some emtpy values. This is because this code executes only
+				// if we do find some new line, so buffer will be partly emptied
+				startIdx = bytes.Index(buffer, []byte{0})
 			}
 		}
 	}()
