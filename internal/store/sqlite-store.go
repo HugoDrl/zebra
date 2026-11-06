@@ -30,6 +30,7 @@ func NewSQLiteStore(dbFile string) (*SQLiteStore, error) {
 		id INTEGER,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		time DATETIME,
+		duration DURATION,
 		level VARCHAR(255),
 		message VARCHAR(255),
 		service VARCHAR(255),
@@ -70,7 +71,7 @@ func prepareReadLogsSQLQuery(filters filter.Filters) (string, []any) {
 		params = append(params, filters.Service)
 	}
 
-	sqlStr := "SELECT time, level, message, service, extras FROM logs"
+	sqlStr := "SELECT time, level, duration, message, service, extras FROM logs"
 	if len(wheres) > 0 {
 		sqlStr += " WHERE " + strings.Join(wheres, " AND ")
 	}
@@ -79,14 +80,14 @@ func prepareReadLogsSQLQuery(filters filter.Filters) (string, []any) {
 
 func prepareInsertLogsSQLQuery(logs []*parser.Log) (string, []any) {
 	var sqlStrBuilder strings.Builder
-	sqlStrBuilder.WriteString("INSERT INTO logs (time, level, message, service, extras) VALUES ")
-	args := make([]any, 0, len(logs)*5)
+	sqlStrBuilder.WriteString("INSERT INTO logs (time, level, duration, message, service, extras) VALUES ")
+	args := make([]any, 0, len(logs)*6)
 	for i, log := range logs {
 		if i > 0 {
 			sqlStrBuilder.WriteString(",")
 		}
-		sqlStrBuilder.WriteString("(?, ?, ?, ?, ?)")
-		args = append(args, log.Time, log.Level, log.Message, log.Service, fmt.Sprintf("%v", log.Extra))
+		sqlStrBuilder.WriteString("(?, ?, ?, ?, ?, ?)")
+		args = append(args, log.Time, log.Level, log.Duration, log.Message, log.Service, fmt.Sprintf("%v", log.Extra))
 	}
 
 	return sqlStrBuilder.String(), args
@@ -120,7 +121,7 @@ func (s *SQLiteStore) RetrieveLogs(ctx context.Context, filters filter.Filters) 
 
 		var extras any
 		// TODO: actually return extras
-		if err := rows.Scan(&log.Time, &log.Level, &log.Message, &log.Service, &extras); err != nil {
+		if err := rows.Scan(&log.Time, &log.Level, &log.Duration, &log.Message, &log.Service, &extras); err != nil {
 			return nil, nil, err
 		}
 		logs = append(logs, &log)
