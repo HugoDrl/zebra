@@ -20,10 +20,14 @@ func TestSQLiteStore(t *testing.T) {
 		inputFilters filter.Filters
 		expected     []*parser.Log
 	}{
+		// zero value tests
 		"nil as input should return empty slice": {
-			input:        nil,
-			inputFilters: filter.Filters{},
-			expected:     []*parser.Log{},
+			input:    nil,
+			expected: []*parser.Log{},
+		},
+		"emtpy slice as input should return empty slice": {
+			input:    []*parser.Log{},
+			expected: []*parser.Log{},
 		},
 		"nil as input with filters should return empty slice": {
 			input: nil,
@@ -32,11 +36,6 @@ func TestSQLiteStore(t *testing.T) {
 			},
 			expected: []*parser.Log{},
 		},
-		"emtpy slice as input should return empty slice": {
-			input:        []*parser.Log{},
-			inputFilters: filter.Filters{},
-			expected:     []*parser.Log{},
-		},
 		"emtpy slice as input with filters should return empty slice": {
 			input: []*parser.Log{},
 			inputFilters: filter.Filters{
@@ -44,11 +43,15 @@ func TestSQLiteStore(t *testing.T) {
 			},
 			expected: []*parser.Log{},
 		},
+
+		// simpler case
 		"single log with no filters should return the log": {
 			input:        []*parser.Log{{Time: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)}},
 			inputFilters: filter.Filters{},
 			expected:     []*parser.Log{{Time: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)}},
 		},
+
+		// filters testing
 		"single log not concerned by start date filter should not be returned": {
 			input:        []*parser.Log{{Time: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)}},
 			inputFilters: filter.Filters{StartDate: time.Date(2001, 1, 1, 0, 0, 0, 0, time.UTC)},
@@ -74,7 +77,50 @@ func TestSQLiteStore(t *testing.T) {
 			inputFilters: filter.Filters{Service: "not-test"},
 			expected:     []*parser.Log{},
 		},
-		// TODO: actually test (and implement) extras
+
+		// small global test
+		"single log with all fields existing should return them properly": {
+			input: []*parser.Log{{
+				Time:     time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC),
+				Level:    parser.Error,
+				Duration: parser.Duration(10 * time.Second),
+				Message:  "error",
+				Service:  "api",
+				Extra:    map[string]string{"user": "me"},
+			}},
+			expected: []*parser.Log{{
+				Time:     time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC),
+				Level:    parser.Error,
+				Duration: parser.Duration(10 * time.Second),
+				Message:  "error",
+				Service:  "api",
+				Extra:    map[string]string{"user": "me"},
+			}},
+		},
+
+		// extra fields tests
+		"single log with no extras should return a nil map": {
+			input: []*parser.Log{{
+				Extra: map[string]string{},
+			}},
+			expected: []*parser.Log{{
+				Extra: nil,
+			}},
+		},
+		"single log with multiple extras should return them all": {
+			input: []*parser.Log{{
+				Extra: map[string]string{
+					"extra1": "1",
+					"extra2": "2",
+				},
+			}},
+			expected: []*parser.Log{{
+				Extra: map[string]string{
+					"extra1": "1",
+					"extra2": "2",
+				},
+			}},
+		},
 	}
 
 	for name, test := range tests {

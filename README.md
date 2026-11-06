@@ -110,3 +110,14 @@ If no new log is seen in **500 milliseconds**, currently waiting logs will also 
 Because of this, the maximum amount of time waiting for logs to be inserted in the database is around **50 seconds**.  
 Lastly, pending logs will be inserted in database before zebra stops to avoid losing data.  
 
+
+### STORAGE STRATEGY
+
+Logs are stored in a separate table than their extra fields to store efficiently extras and be able to query efficiently and filter on those extras.  
+This implies application controlled identification of logs (because logs have no clear identification outside the database) to link logs and their metadata. `UUID` is used for that purpose.
+
+
+### KNOWN LIMITATIONS
+
+Currently, zebra is not able to understand if a log has already been seen. If a single file is browsed multiple times, its logs will be duplicated in database.  
+This will be resolved in a later update.
