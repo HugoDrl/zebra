@@ -59,6 +59,11 @@ func TestSQLiteStore(t *testing.T) {
 			inputFilters: filter.Filters{EndDate: time.Date(1999, 1, 1, 0, 0, 0, 0, time.UTC)},
 			expected:     []*parser.Log{},
 		},
+		"single log concerned by end date filter should be returned": {
+			input:        []*parser.Log{{Time: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)}},
+			inputFilters: filter.Filters{EndDate: time.Date(2001, 1, 1, 0, 0, 0, 0, time.UTC)},
+			expected:     []*parser.Log{{Time: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)}},
+		},
 		"single log not concerned by level filter should not be returned": {
 			input:        []*parser.Log{{Level: "test"}},
 			inputFilters: filter.Filters{Level: "not-test"},
@@ -85,7 +90,6 @@ func TestSQLiteStore(t *testing.T) {
 
 			// send all logs to a channel
 			logChan := make(chan *parser.Log)
-			done := make(chan error)
 			go func() {
 				for _, log := range test.input {
 					logChan <- log
@@ -94,13 +98,7 @@ func TestSQLiteStore(t *testing.T) {
 			}()
 
 			// use that channel to send
-			go func() {
-				_, err := store.InsertLogs(ctx, logChan, nil)
-				done <- err
-				close(done)
-			}()
-
-			if err := <-done; err != nil {
+			if _, err := store.InsertLogs(ctx, logChan, nil); err != nil {
 				t.Fatal(err)
 			}
 			// retrieve logs just inserted with filters
